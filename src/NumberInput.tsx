@@ -21,7 +21,7 @@ export default function NumberInput(props: any) {
                     (<div className="relative flex self-end z-10 justify-end">
                         <div className="absolute mt-1 z-50 bg-white shadow-lg w-12 h-24 overflow-scroll overflow-x-hidden flex flex-col place-items-center">
                             {List.map((entry: any, i: any) => {
-                                return (<div key={i} className="h-6 w-12 hover:bg-gray-400" onClick={() => { onItemClick(entry) }}>{entry}</div>);
+                                return (<div key={i} className="h-6 w-8 hover:bg-gray-300 place-content-center flex transition-colors" onClick={() => { onItemClick(entry) }}>{entry}</div>);
                             })}
                         </div>
                     </div>)
