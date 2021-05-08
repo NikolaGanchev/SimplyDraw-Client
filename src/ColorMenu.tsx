@@ -39,14 +39,8 @@ export default function ColorMenu(props: any) {
     }
 
     function onMenuClick() {
-        if (isClicked) {
-            setIsClicked(false);
-            setShouldShowMenu(false);
-        }
-        else {
-            setIsClicked(true);
-            setShouldShowMenu(true);
-        }
+        setIsClicked(!isClicked);
+        setShouldShowMenu(!isClicked);
     }
 
     function onChangeColor(col: any, event: any) {
