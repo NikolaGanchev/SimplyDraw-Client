@@ -33,7 +33,7 @@ export default function ColorMenu(props: any) {
     }
 
     function onHoverLeave(event: any) {
-        if (!isClicked && ColorPickerRef.current?.contains(event.target)) {
+        if (!isClicked) {
             setShouldShowMenu(false);
         }
     }
@@ -56,14 +56,14 @@ export default function ColorMenu(props: any) {
     }
 
     return (
-        <div className="relative top-0 self-center inline-flex space-x-3">
+        <div className="relative top-0 self-center inline-flex space-x-1">
 
             {defaultColors.map((color, i) => {
                 return (<ColorCircle color={color} key={i} onSelect={onColorSelectFromDefaults}></ColorCircle>)
             })}
 
-            <div className="relative inline-flex flex-col self-center" onMouseEnter={onHover} onMouseLeave={onHoverLeave}>
-                <div>
+            <div className="relative inline-flex flex-col self-center hover:bg-gray-300 transition-colors place-items-center align-center w-12 h-12 justify-center rounded-md" onMouseEnter={onHover} onMouseLeave={onHoverLeave}>
+                <div className="">
                     <div className="rounded-full w-10 h-10 flex items-center justify-center ml-auto" onClick={onMenuClick} style={{ backgroundColor: rgbaToString(color) }}><img src={PickColorIcon} className="w-6 h-6 select-none"></img></div>
                 </div >
                 {(shouldShowMenu) ? (

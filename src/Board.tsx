@@ -15,8 +15,12 @@ export default function Board() {
 
         const canvas: HTMLCanvasElement = canvasRef.current!;
         const ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+        resize();
+
+        function resize() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
 
         const startDrawing = (clickEvent: any) => {
             isDrawing = true;
@@ -56,6 +60,7 @@ export default function Board() {
             };
         }
 
+        canvas.addEventListener("onresize", resize)
         canvas.addEventListener("mousedown", startDrawing);
         canvas.addEventListener("mouseup", stopDrawing);
         canvas.addEventListener("mousemove", draw);
@@ -77,6 +82,9 @@ export default function Board() {
         EventBus.subscribe(EVENTS.CANVAS_DOWNLOAD_REQUEST, saveCanvasToUserDevice);
         EventBus.subscribe(EVENTS.DRAWING_COLOR_CHANGE_REQUEST, (newColor: string) => {
             color = rgbaToString(newColor);
+        });
+        EventBus.subscribe(EVENTS.LINE_WIDTH_CHANGE_REQUEST, (newValue: number) => {
+            lineWidth = newValue;
         });
     });
 

@@ -1,11 +1,21 @@
 import { useRef, useState } from 'react';
+import EventBus from './EventBus';
+import { EVENTS } from './EventBus';
+import { rgbaToString } from './Utils';
+import ExpandMoreIcon from './expand_more_black_24dp.svg';
+import ExpandLessIcon from './expand_less_black_24dp.svg';
 
 export default function NumberInput(props: any) {
     const [List, setList] = useState(props.list);
     const [selectedValue, setSelectedValue] = useState(props.default);
     const [isListOpen, setIsListOpen] = useState(false);
+    const [borderColor, setBorderColor] = useState("#000000");
+    const MIN_NUMBER = props.min || 1;
+    const MAX_NUMBER = props.max || 999;
+    const [ArrowIcon, setArrowIcon] = useState(ExpandMoreIcon);
 
     function onButtonClick() {
+        setArrowIcon((isListOpen) ? ExpandMoreIcon : ExpandLessIcon);
         setIsListOpen(!isListOpen);
     }
 
@@ -13,13 +23,27 @@ export default function NumberInput(props: any) {
         setIsListOpen(false);
         setSelectedValue(newValue);
     }
+
+    EventBus.subscribe(EVENTS.DRAWING_COLOR_CHANGE_REQUEST, (newColor: string) => {
+        setBorderColor(rgbaToString(newColor));
+    });
+
+    function handleNumberChange(event: React.ChangeEvent<HTMLInputElement>) {
+        let value = event.target.value.replace(/\D/, '');
+        if (value >= MIN_NUMBER && value <= MAX_NUMBER || value === "") {
+            setSelectedValue(value);
+            EventBus.dispatchEvent(EVENTS.LINE_WIDTH_CHANGE_REQUEST, value);
+        }
+    }
+
     return (
-        <div className="flex self-center justify-center w-12 h-12 border-2 rounded-md place-content-center place-items-center border-green-600 cursor-pointer select-none flex-row" onClick={onButtonClick}>
-            <div className="text-green-500">{selectedValue}</div>
+        <div className="flex self-center justify-center w-24 h-12 border-2 rounded-md place-content-center place-items-center cursor-pointer select-none flex-row p-0 m-0 " style={{ borderColor: borderColor }}>
+            <div className="h-full flex place-items-center justify-center w-3/4"> <input className="w-full focus:outline-none text-center h-full" value={selectedValue} onChange={handleNumberChange}></input></div>
+            <div className="h-full flex place-items-center justify-center w-1/4 border-l-2 hover:bg-gray-300 rounded-md" onClick={onButtonClick}><img src={ArrowIcon}></img></div>
             {
                 (isListOpen) ?
-                    (<div className="relative flex self-end z-10 justify-end">
-                        <div className="absolute mt-1 z-50 bg-white shadow-lg w-12 h-24 overflow-scroll overflow-x-hidden flex flex-col place-items-center">
+                    (<div className="relative flex self-end z-10 justify-end slim-scrollbar hover:bg-white">
+                        <div className="rounded-md absolute mt-1 z-50 bg-white shadow-lg w-24 h-24 overflow-scroll overflow-x-hidden flex flex-col place-items-center">
                             {List.map((entry: any, i: any) => {
                                 return (<div key={i} className="h-6 w-8 hover:bg-gray-300 place-content-center flex transition-colors" onClick={() => { onItemClick(entry) }}>{entry}</div>);
                             })}
