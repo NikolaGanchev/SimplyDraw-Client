@@ -14,7 +14,7 @@ export default function ColorMenu(props: any) {
     const [isClicked, setIsClicked] = useState(false);
     const defaultColors = [
         { r: 0, g: 0, b: 0, a: 1 },
-        { r: 50, g: 50, b: 255, a: 1 },
+        { r: 255, g: 255, b: 0, a: 1 },
         { r: 255, g: 0, b: 200, a: 1 },
         { r: 0, g: 0, b: 230, a: 1 },
         { r: 0, g: 200, b: 0, a: 1 },
@@ -51,7 +51,7 @@ export default function ColorMenu(props: any) {
     }
 
     function onColorSelectFromDefaults(col: any) {
-        setColor(col);
+        onChangeColor({ rgb: col }, null);
         EventBus.dispatchEvent(EventBus.EVENTS.DRAWING_COLOR_CHANGE_REQUEST, col);
     }
 
