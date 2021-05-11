@@ -9,7 +9,8 @@ export default function Board() {
     let isDrawing = false;
     let lineWidth = 10;
     let lineCap: CanvasLineCap = "round";
-    let color: string = "rgba(0, 0, 0, 1)";
+    let currentColor: string = "rgba(0, 0, 0, 1)"
+    let selectedColor: string = "rgba(0, 0, 0, 1)";
 
     useEffect(() => {
 
@@ -41,7 +42,7 @@ export default function Board() {
 
             ctx.lineWidth = lineWidth;
             ctx.lineCap = lineCap;
-            ctx.strokeStyle = color;
+            ctx.strokeStyle = currentColor;
 
             ctx.lineTo(position.x, position.y);
             ctx.stroke();
@@ -81,10 +82,23 @@ export default function Board() {
 
         EventBus.subscribe(EVENTS.CANVAS_DOWNLOAD_REQUEST, saveCanvasToUserDevice);
         EventBus.subscribe(EVENTS.DRAWING_COLOR_CHANGE_REQUEST, (newColor: string) => {
-            color = rgbaToString(newColor);
+            selectedColor = rgbaToString(newColor);
+            currentColor = selectedColor;
         });
         EventBus.subscribe(EVENTS.LINE_WIDTH_CHANGE_REQUEST, (newValue: number) => {
             lineWidth = newValue;
+        });
+        EventBus.subscribe(EVENTS.LINE_CAP_CHANGE_REQUEST, (newValue: CanvasLineCap) => {
+            lineCap = newValue;
+        });
+        EventBus.subscribe(EVENTS.ACTIVATE_ERASER_REQUEST, () => {
+            currentColor = "rgba(255, 255, 255, 1)";
+        });
+        EventBus.subscribe(EVENTS.DISABLE_ERASER_REQUEST, () => {
+            currentColor = selectedColor;
+        });
+        EventBus.subscribe(EVENTS.FULL_ERASE_REQUEST, () => {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
         });
     });
 

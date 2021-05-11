@@ -43,7 +43,7 @@ export default function NumberInput(props: any) {
 
             <div className="h-full flex place-items-center justify-center w-3/4">
                 <label className="text-xs self-start text-center">{label}
-                    <input className="w-full focus:outline-none text-center h-full rounded-md self-center text-base" value={selectedValue} onChange={handleNumberChange} id="line-width"></input>
+                    <input className="w-full focus:outline-none text-center h-full rounded-md self-center text-base" value={selectedValue} onChange={handleNumberChange}></input>
                 </label>
             </div>
             <div className="h-full flex place-items-center justify-center w-1/4 border-l-2 hover:bg-gray-300 rounded-md" onClick={onButtonClick}><img src={ArrowIcon}></img></div>
