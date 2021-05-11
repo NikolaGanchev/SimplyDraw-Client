@@ -1,8 +1,8 @@
 import ColorCircle from "./ColorCircle";
-import Eraser from './eraser-line.svg';
-import EraserFill from './eraser-fill.svg';
-import EventBus from './EventBus';
-import { EVENTS } from './EventBus';
+import Eraser from './resources/eraser-line.svg';
+import EraserFill from './resources/eraser-fill.svg';
+import EventBus from './Events/EventBus';
+import { EVENTS } from './Events/EventBus';
 import { useState, useEffect } from 'react';
 import ConfirmAlert from "./ConfirmAlert";
 

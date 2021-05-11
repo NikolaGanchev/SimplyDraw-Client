@@ -1,8 +1,8 @@
 import { useRef, useEffect, useState } from 'react';
-import EventBus from './EventBus';
-import { EVENTS } from './EventBus';
+import EventBus from './Events/EventBus';
+import { EVENTS } from './Events/EventBus';
 import { saveAs } from 'file-saver';
-import { rgbaToString } from './Utils';
+import Color from './Color';
 
 export default function Board() {
     const canvasRef = useRef(null);
@@ -13,7 +13,7 @@ export default function Board() {
     let selectedColor: string = "rgba(0, 0, 0, 1)";
 
     useEffect(() => {
-
+        let isControlPressed = false;
         const canvas: HTMLCanvasElement = canvasRef.current!;
         const ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
         resize();
@@ -25,7 +25,7 @@ export default function Board() {
 
         const startDrawing = (clickEvent: any) => {
             isDrawing = true;
-            draw(clickEvent);
+            onMoveEvent(clickEvent);
         }
 
         const stopDrawing = () => {
@@ -33,7 +33,7 @@ export default function Board() {
             ctx.beginPath();
         }
 
-        function draw(moveEvent: any) {
+        function onMoveEvent(moveEvent: any) {
             if (!isDrawing) return;
 
             var position = getMousePositionInCanvas(moveEvent);
@@ -61,14 +61,26 @@ export default function Board() {
             };
         }
 
+        function undoLastAction() {
+            console.log("undo");
+        }
+
         canvas.addEventListener("onresize", resize)
         canvas.addEventListener("mousedown", startDrawing);
         canvas.addEventListener("mouseup", stopDrawing);
-        canvas.addEventListener("mousemove", draw);
+        canvas.addEventListener("mousemove", onMoveEvent);
         canvas.addEventListener("mouseout", stopDrawing);
         canvas.addEventListener("touchstart", startDrawing);
         canvas.addEventListener("touchend", stopDrawing);
-        canvas.addEventListener("touchmove", draw);
+        canvas.addEventListener("touchmove", onMoveEvent);
+
+        document.addEventListener('keydown', (e) => {
+            if (e.code === "KeyZ" && isControlPressed) {
+                undoLastAction();
+            }
+            isControlPressed = e.code === "ControlLeft"
+        });
+
 
         function saveCanvasToUserDevice() {
             canvas.toBlob(function (blob: Blob | null) {
@@ -81,8 +93,8 @@ export default function Board() {
         }
 
         EventBus.subscribe(EVENTS.CANVAS_DOWNLOAD_REQUEST, saveCanvasToUserDevice);
-        EventBus.subscribe(EVENTS.DRAWING_COLOR_CHANGE_REQUEST, (newColor: string) => {
-            selectedColor = rgbaToString(newColor);
+        EventBus.subscribe(EVENTS.DRAWING_COLOR_CHANGE_REQUEST, (newColor: Color) => {
+            selectedColor = newColor.rgbaToString();
             currentColor = selectedColor;
         });
         EventBus.subscribe(EVENTS.LINE_WIDTH_CHANGE_REQUEST, (newValue: number) => {

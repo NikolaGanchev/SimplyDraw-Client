@@ -1,6 +1,6 @@
-import DownloadIcon from './file_download_black_24dp.svg'
-import EventBus from './EventBus'
-import { EVENTS } from './EventBus'
+import DownloadIcon from './resources/file_download_black_24dp.svg'
+import EventBus from './Events/EventBus'
+import { EVENTS } from './Events/EventBus'
 import ColorMenu from './ColorMenu'
 import NumberInput from './NumberInput';
 import LineStyleInput from './LineStyleInput';

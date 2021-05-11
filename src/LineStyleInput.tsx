@@ -1,10 +1,10 @@
 import StyleButton from "./StyleButton";
 import { useState } from 'react';
-import EventBus from './EventBus';
-import { EVENTS } from './EventBus';
-import { rgbaToString } from './Utils';
-import ExpandMoreIcon from './expand_more_black_24dp.svg';
-import ExpandLessIcon from './expand_less_black_24dp.svg';
+import EventBus from './Events/EventBus';
+import { EVENTS } from './Events/EventBus';
+import Color from './Color';
+import ExpandMoreIcon from './resources/expand_more_black_24dp.svg';
+import ExpandLessIcon from './resources/expand_less_black_24dp.svg';
 
 export default function LineStyleInput(props: any) {
     const [List, setList] = useState(["Fragment", "Square", "Round"]);
@@ -14,8 +14,8 @@ export default function LineStyleInput(props: any) {
     const [borderColor, setBorderColor] = useState(props.defaultColor);
     const [selectedValue, setSelectedValue] = useState(props.default);
 
-    EventBus.subscribe(EVENTS.DRAWING_COLOR_CHANGE_REQUEST, (newColor: string) => {
-        setBorderColor(rgbaToString(newColor));
+    EventBus.subscribe(EVENTS.DRAWING_COLOR_CHANGE_REQUEST, (newColor: Color) => {
+        setBorderColor(newColor.rgbaToString());
     });
 
     function onButtonClick() {
