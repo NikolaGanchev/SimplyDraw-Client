@@ -26,7 +26,7 @@ export default function ConfirmAlert(props: any) {
                         <b>Refuse</b>
                     </button>
                     <button className="w-24 h-5/6 p-3 flex items-center justify-center bg-red-600 text-white hover:bg-red-700 rounded-md" onClick={() => { props.onResponse(true) }}>
-                        <b>Ok</b>
+                        <b>OK</b>
                     </button>
                 </div>
             </div>

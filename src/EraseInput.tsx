@@ -52,13 +52,13 @@ export function EraseInput() {
 
                     <div className="flex flex-col" onClick={onFullErase}>
                         <span className="text-xs text-center pt-1">Clear</span>
-                        <div className="rounded-full w-10 h-8 flex items-center justify-center ml-auto " ><img src={EraserFill} className="w-6 h-6 select-none"></img></div>
+                        <div className="rounded-full w-10 h-8 flex items-center justify-center ml-auto " ><input type="image" src={EraserFill} className="w-6 h-6 select-none"></input></div>
                     </div>
                 </div>
 
                 <div className="relative inline-flex self-center transition-colors place-items-center align-center w-12 h-12 justify-center rounded-md cursor-pointer" style={{ backgroundColor: background }} onClick={onEraserClick} onMouseEnter={onHover} onMouseLeave={onStopHover}>
                     <div>
-                        <div className="rounded-full w-10 h-10 flex items-center justify-center ml-auto" ><img src={Eraser} className="w-6 h-6 select-none"></img></div>
+                        <div className="rounded-full w-10 h-10 flex items-center justify-center ml-auto" ><input type="image" src={Eraser} className="w-6 h-6 select-none"></input></div>
                     </div >
                 </div>
             </div>

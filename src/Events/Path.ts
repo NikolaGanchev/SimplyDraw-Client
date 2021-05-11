@@ -1,10 +1,12 @@
-export default class DrawPathPayload {
+import Color from "../Color";
+
+export default class Path {
     lineWidth: number;
     lineCap: CanvasLineCap;
-    color: { r: number, g: number, b: number, a: number };
+    color: Color;
     positions: Array<{ x: number, y: number }>;
 
-    constructor(lineWidth: number, lineCap: CanvasLineCap, color: { r: number, g: number, b: number, a: number }) {
+    constructor(lineWidth: number, lineCap: CanvasLineCap, color: Color) {
         this.lineWidth = lineWidth;
         this.lineCap = lineCap;
         this.color = color;

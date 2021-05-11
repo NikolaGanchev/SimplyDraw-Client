@@ -65,7 +65,7 @@ export default function ColorMenu(props: any) {
 
             <div className="relative inline-flex flex-col self-center hover:bg-gray-300 transition-colors place-items-center align-center w-12 h-12 justify-center rounded-md" onMouseEnter={onHover} onMouseLeave={onHoverLeave}>
                 <div className="">
-                    <div className="rounded-full w-10 h-10 flex items-center justify-center ml-auto" onClick={onMenuClick} style={{ backgroundColor: color.rgbaToString() }}><img src={PickColorIcon} className="w-6 h-6 select-none"></img></div>
+                    <button className="rounded-full w-10 h-10 flex items-center justify-center ml-auto" onClick={onMenuClick} style={{ backgroundColor: color.rgbaToString() }}><img src={PickColorIcon} className="w-6 h-6 select-none"></img></button>
                 </div >
                 {(shouldShowMenu) ? (
                     <div className="relative flex self-end justify-end z-10" ref={ColorPickerRef}>

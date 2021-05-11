@@ -1,4 +1,4 @@
-export default class DrawEvent {
+export default class Line {
     x: number;
     y: number;
 
