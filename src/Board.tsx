@@ -3,11 +3,12 @@ import EventBus from './Events/EventBus';
 import { EVENTS } from './Events/EventBus';
 import { saveAs } from 'file-saver';
 import Color from './Color';
-import Line from './Events/Line';
+import Position from './Events/Position';
 import Path from './Events/Path';
 import DrawEvent from './Events/DrawEvent';
 import { DrawEventType } from './Events/DrawEventType';
 import EventCache from './Events/EventCache';
+import ColorRBGA from './ColorRBGA';
 
 export default function Board() {
     const canvasRef = useRef(null);
@@ -16,6 +17,7 @@ export default function Board() {
     let lineCap: CanvasLineCap = "round";
     let currentColor: Color = new Color(0, 0, 0, 1);
     let selectedColor: Color = new Color(0, 0, 0, 1);
+    let isFloodFill: boolean = false;
 
     useEffect(() => {
         let isControlPressed = false;
@@ -32,6 +34,11 @@ export default function Board() {
         }
 
         const startDrawing = (clickEvent: any) => {
+            if (isFloodFill) {
+                floodFill(clickEvent);
+                return;
+            }
+
             ctx.lineWidth = lineWidth;
             ctx.lineCap = lineCap;
             ctx.strokeStyle = currentColor.rgbaToString();
@@ -63,7 +70,7 @@ export default function Board() {
             draw(position);
         }
 
-        function draw(position: { x: number, y: number }) {
+        function draw(position: Position) {
             ctx.lineTo(position.x, position.y);
             ctx.stroke();
             ctx.beginPath();
@@ -77,7 +84,7 @@ export default function Board() {
                     ctx.lineCap = e.payload.lineCap;
                     ctx.strokeStyle = e.payload.color.rgbaToString();
 
-                    e.payload.positions.forEach((e: { x: number, y: number }) => {
+                    e.payload.positions.forEach((e: Position) => {
                         draw(e);
                     });
 
@@ -130,6 +137,70 @@ export default function Board() {
 
         function clearCanvas() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
+        }
+
+        // Source: https://stackoverflow.com/questions/53077955/how-do-i-do-flood-fill-on-the-html-canvas-in-javascript
+        function floodFill(e: any, range = 1) {
+            // Enormous thanks to https://stackoverflow.com/questions/57803/how-to-convert-decimal-to-hexadecimal-in-javascript
+            function decimalToHexadecimal(number: number): number {
+                if (number < 0) {
+                    number = 0xFFFFFFFF + number + 1;
+                }
+
+                return number;
+            }
+
+            function getPixel(pixelData: any, x: number, y: number) {
+                if (x < 0 || y < 0 || x >= pixelData.width || y >= pixelData.height) {
+                    return -1;
+                } else {
+                    return pixelData.data[y * pixelData.width + x];
+                }
+            }
+
+            const startingPixel = getMousePositionInCanvas(e);
+            let x = startingPixel.x;
+            let y = startingPixel.y;
+            if (x === undefined || y === undefined) return;
+
+            const fillColor = new Color(currentColor.a, currentColor.b, currentColor.g, currentColor.r).rgbaToDecimalNumber();
+
+            const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
+
+            // make a Uint32Array view on the pixels so we can manipulate pixels
+            // one 32bit value at a time instead of as 4 bytes per pixel
+            const pixelData = {
+                width: imageData.width,
+                height: imageData.height,
+                data: new Uint32Array(imageData.data.buffer),
+            };
+
+
+
+            // get the color we're filling
+            const targetColor = getPixel(pixelData, x, y);
+
+            // check we are actually filling a different color
+            if (targetColor !== fillColor) {
+
+                const pixelsToCheck = [x, y];
+                while (pixelsToCheck.length > 0) {
+                    const y = pixelsToCheck.pop();
+                    const x = pixelsToCheck.pop();
+
+                    const currentColor = getPixel(pixelData, x!, y!);
+                    if (currentColor === targetColor) {
+                        pixelData.data[y! * pixelData.width + x!] = fillColor;
+                        pixelsToCheck.push(x! + 1, y!);
+                        pixelsToCheck.push(x! - 1, y!);
+                        pixelsToCheck.push(x!, y! + 1);
+                        pixelsToCheck.push(x!, y! - 1);
+                    }
+                }
+
+                // put the data back
+                ctx.putImageData(imageData, 0, 0);
+            }
         }
 
         canvas.addEventListener("onresize", resize)
@@ -191,6 +262,12 @@ export default function Board() {
         });
         EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, () => {
             doFutureAction();
+        });
+        EventBus.subscribe(EVENTS.FLOOD_FILL_ACTIVATE_REQUEST, () => {
+            isFloodFill = true;
+        });
+        EventBus.subscribe(EVENTS.FLOOD_FILL_DISABLE_REQUEST, () => {
+            isFloodFill = false;
         });
     });
 

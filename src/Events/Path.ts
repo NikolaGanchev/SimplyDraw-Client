@@ -1,10 +1,11 @@
 import Color from "../Color";
+import Position from "./Position";
 
 export default class Path {
     lineWidth: number;
     lineCap: CanvasLineCap;
     color: Color;
-    positions: Array<{ x: number, y: number }>;
+    positions: Array<Position>;
 
     constructor(lineWidth: number, lineCap: CanvasLineCap, color: Color) {
         this.lineWidth = lineWidth;

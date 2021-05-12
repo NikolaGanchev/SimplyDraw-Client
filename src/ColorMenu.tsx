@@ -13,12 +13,12 @@ export default function ColorMenu(props: any) {
     const ColorPickerRef: MutableRefObject<HTMLDivElement | null> = useRef(null);
     const [isClicked, setIsClicked] = useState(false);
     const defaultColors = [
-        new Color(0, 0, 0, 1),
-        new Color(255, 255, 0, 1),
-        new Color(255, 0, 200, 1),
-        new Color(0, 0, 230, 1),
-        new Color(0, 200, 0, 1),
-        new Color(200, 0, 0, 1),
+        new Color(0, 0, 0, 255),
+        new Color(255, 255, 0, 255),
+        new Color(255, 0, 200, 255),
+        new Color(0, 0, 230, 255),
+        new Color(0, 200, 0, 255),
+        new Color(200, 0, 0, 255),
     ]
 
 
@@ -44,7 +44,7 @@ export default function ColorMenu(props: any) {
     }
 
     function onChangeColor(col: any, event: any) {
-        let color = new Color(col.rgb.r, col.rgb.g, col.rgb.b, col.rgb.a)
+        let color = new Color(col.rgb.r, col.rgb.g, col.rgb.b, col.rgb.a * 255)
         setColor(color);
         let brightness = getColorBrightness(col);
         setPickColorIcon((brightness > 128) ? PickColorIconDark : PickColorIconLight);

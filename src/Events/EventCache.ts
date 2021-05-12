@@ -1,7 +1,4 @@
-import Line from './Line';
-import Path from './Path';
 import DrawEvent from './DrawEvent';
-import { DrawEventType } from './DrawEventType';
 
 class EventCache {
     pastEvents: Array<DrawEvent> = [];
