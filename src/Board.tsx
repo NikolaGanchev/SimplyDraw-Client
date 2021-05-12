@@ -8,7 +8,7 @@ import Path from './Events/Path';
 import DrawEvent from './Events/DrawEvent';
 import { DrawEventType } from './Events/DrawEventType';
 import EventCache from './Events/EventCache';
-import ColorRBGA from './ColorRBGA';
+import ColorABGR from './ColorABGR';
 
 export default function Board() {
     const canvasRef = useRef(null);
@@ -140,15 +140,7 @@ export default function Board() {
         }
 
         // Source: https://stackoverflow.com/questions/53077955/how-do-i-do-flood-fill-on-the-html-canvas-in-javascript
-        function floodFill(e: any, range = 1) {
-            // Enormous thanks to https://stackoverflow.com/questions/57803/how-to-convert-decimal-to-hexadecimal-in-javascript
-            function decimalToHexadecimal(number: number): number {
-                if (number < 0) {
-                    number = 0xFFFFFFFF + number + 1;
-                }
-
-                return number;
-            }
+        function floodFill(e: any) {
 
             function getPixel(pixelData: any, x: number, y: number) {
                 if (x < 0 || y < 0 || x >= pixelData.width || y >= pixelData.height) {
@@ -174,8 +166,6 @@ export default function Board() {
                 height: imageData.height,
                 data: new Uint32Array(imageData.data.buffer),
             };
-
-
 
             // get the color we're filling
             const targetColor = getPixel(pixelData, x, y);

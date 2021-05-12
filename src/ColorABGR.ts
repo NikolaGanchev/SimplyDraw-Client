@@ -1,12 +1,12 @@
 import Color from "./Color";
 
-export default class ColorRBGA {
+export default class ColorARBG {
     r: number;
     b: number;
     g: number;
     a: number;
 
-    constructor(r: number, b: number, g: number, a: number = 255) {
+    constructor(a: number = 255, b: number, g: number, r: number,) {
         this.r = r;
         this.g = g;
         this.b = b;
@@ -14,7 +14,7 @@ export default class ColorRBGA {
     }
 
     static fromRGBA(color: Color) {
-        return new ColorRBGA(color.r, color.b, color.g);
+        return new ColorARBG(color.a, color.b, color.g, color.r);
     }
 
     rbgaToString() {
@@ -27,7 +27,7 @@ export default class ColorRBGA {
         let b = this.b & 0xFF;
         let a = this.a & 0xFF;
 
-        let rgba = (r << 24) + (b << 16) + (g << 8) + (a);
+        let rgba = (a << 24) + (b << 16) + (g << 8) + (r);
 
         return rgba;
     }
