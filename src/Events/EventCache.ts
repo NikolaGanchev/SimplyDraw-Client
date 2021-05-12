@@ -6,23 +6,16 @@ import { DrawEventType } from './DrawEventType';
 class EventCache {
     pastEvents: Array<DrawEvent> = [];
     futureEvents: Array<DrawEvent> = [];
-    readonly LIMIT = 10;
 
     constructor() { };
 
     addEvent(drawEvent: DrawEvent | null) {
-        if (this.pastEvents.length > 10) {
-            this.pastEvents.shift();
-        }
-
         if (drawEvent === null || drawEvent === undefined) return;
 
 
         this.pastEvents.push(drawEvent);
 
         this.futureEvents.length = 0;
-
-        console.log("EVENT ADDED" + JSON.stringify(drawEvent));
     }
 
     rewindEvent() {

@@ -71,16 +71,26 @@ export default function Board() {
         }
 
         function drawEvent(e: DrawEvent) {
-            console.log(e);
-            ctx.lineWidth = e.payload.lineWidth;
-            ctx.lineCap = e.payload.lineCap;
-            ctx.strokeStyle = e.payload.color.rgbaToString();
+            switch (e.type) {
+                case DrawEventType.DrawEvent: {
+                    ctx.lineWidth = e.payload.lineWidth;
+                    ctx.lineCap = e.payload.lineCap;
+                    ctx.strokeStyle = e.payload.color.rgbaToString();
 
-            e.payload.positions.forEach((e: { x: number, y: number }) => {
-                draw(e);
-            });
+                    e.payload.positions.forEach((e: { x: number, y: number }) => {
+                        draw(e);
+                    });
 
-            ctx.beginPath();
+                    ctx.beginPath();
+                    break;
+                }
+                case DrawEventType.FullEraseEvent: {
+                    clearCanvas();
+                    break;
+                }
+            }
+
+
         }
 
         function getMousePositionInCanvas(event: any) {
@@ -97,13 +107,15 @@ export default function Board() {
         function undoLastAction() {
 
             if (EventCache.pastEvents.length === 0) return;
-            console.log(EventCache.pastEvents);
+
             EventCache.rewindEvent();
-            console.log(EventCache.pastEvents);
+
             clearCanvas();
+
             EventCache.pastEvents.forEach((e: DrawEvent) => {
                 drawEvent(e);
             });
+
         }
 
         function doFutureAction() {
@@ -170,6 +182,8 @@ export default function Board() {
             currentColor = selectedColor;
         });
         EventBus.subscribe(EVENTS.FULL_ERASE_REQUEST, () => {
+            let event = new DrawEvent(DrawEventType.FullEraseEvent);
+            EventCache.addEvent(event);
             clearCanvas();
         });
         EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, () => {
