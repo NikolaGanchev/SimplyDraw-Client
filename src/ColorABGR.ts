@@ -13,15 +13,15 @@ export default class ColorARBG {
         this.a = a;
     }
 
-    static fromRGBA(color: Color) {
+    static fromRGBA(color: Color): ColorARBG {
         return new ColorARBG(color.a, color.b, color.g, color.r);
     }
 
-    rbgaToString() {
+    abgrToString() {
         return `rgba(${this.r}, ${this.b}, ${this.g}, ${this.a})`;
     }
 
-    rbgaToDecimalNumber(): number {
+    abgrToDecimalNumber(): number {
         let r = this.r & 0xFF;
         let g = this.g & 0xFF;
         let b = this.b & 0xFF;

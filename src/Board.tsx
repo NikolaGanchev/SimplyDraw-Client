@@ -9,6 +9,7 @@ import DrawEvent from './Events/DrawEvent';
 import { DrawEventType } from './Events/DrawEventType';
 import EventCache from './Events/EventCache';
 import ColorABGR from './ColorABGR';
+import FloodFillEvent from './Events/FloodFillEvent';
 
 export default function Board() {
     const canvasRef = useRef(null);
@@ -35,7 +36,13 @@ export default function Board() {
 
         const startDrawing = (clickEvent: any) => {
             if (isFloodFill) {
-                floodFill(clickEvent);
+                event = new DrawEvent(DrawEventType.FloodFillEvent);
+                const startingPixel = getMousePositionInCanvas(clickEvent);
+                let payload = new FloodFillEvent(startingPixel, currentColor);
+                event.payload = payload;
+                EventCache.addEvent(event);
+                event = null;
+                floodFill(startingPixel, currentColor);
                 return;
             }
 
@@ -95,6 +102,10 @@ export default function Board() {
                     clearCanvas();
                     break;
                 }
+                case DrawEventType.FloodFillEvent: {
+                    floodFill(e.payload.startingPixel, e.payload.fillColor);
+                    break;
+                }
             }
 
 
@@ -140,7 +151,7 @@ export default function Board() {
         }
 
         // Source: https://stackoverflow.com/questions/53077955/how-do-i-do-flood-fill-on-the-html-canvas-in-javascript
-        function floodFill(e: any) {
+        function floodFill(startingPixel: Position, color: Color) {
 
             function getPixel(pixelData: any, x: number, y: number) {
                 if (x < 0 || y < 0 || x >= pixelData.width || y >= pixelData.height) {
@@ -150,12 +161,12 @@ export default function Board() {
                 }
             }
 
-            const startingPixel = getMousePositionInCanvas(e);
+
             let x = startingPixel.x;
             let y = startingPixel.y;
             if (x === undefined || y === undefined) return;
 
-            const fillColor = new Color(currentColor.a, currentColor.b, currentColor.g, currentColor.r).rgbaToDecimalNumber();
+            const fillColor = ColorABGR.fromRGBA(color).abgrToDecimalNumber();
 
             const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
 
