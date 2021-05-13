@@ -8,7 +8,7 @@ import Color from './Color';
 
 export default function ColorMenu(props: any) {
     const [shouldShowMenu, setShouldShowMenu] = useState(false);
-    const [color, setColor] = useState(new Color(0, 0, 0, 1));
+    const [color, setColor] = useState(new Color(0, 0, 0, 255));
     const [PickColorIcon, setPickColorIcon] = useState(PickColorIconLight);
     const ColorPickerRef: MutableRefObject<HTMLDivElement | null> = useRef(null);
     const [isClicked, setIsClicked] = useState(false);

@@ -9,7 +9,6 @@ class EventCache {
     addEvent(drawEvent: DrawEvent | null) {
         if (drawEvent === null || drawEvent === undefined) return;
 
-
         this.pastEvents.push(drawEvent);
 
         this.futureEvents.length = 0;

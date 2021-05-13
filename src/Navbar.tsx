@@ -11,7 +11,7 @@ import FloodFillButton from './FloodFillButton';
 export default function Navbar() {
     return (
         <div className="flex h-12 shadow-md bg-white dark:bg-black w-full">
-            <h1 className="self-center ml-3 text-3xl select-none">Simply Draw</h1>
+            <h1 className="self-center ml-3 text-3xl select-none whitespace-nowrap">Simply Draw</h1>
             <div className="ml-auto mr-3 flex space-x-3">
                 <FloodFillButton></FloodFillButton>
                 <UndoRedoInput></UndoRedoInput>

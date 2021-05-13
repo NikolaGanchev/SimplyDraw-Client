@@ -16,8 +16,8 @@ export default function Board() {
     let isDrawing = false;
     let lineWidth = 10;
     let lineCap: CanvasLineCap = "round";
-    let currentColor: Color = new Color(0, 0, 0, 1);
-    let selectedColor: Color = new Color(0, 0, 0, 1);
+    let currentColor: Color = new Color(0, 0, 0, 255);
+    let selectedColor: Color = new Color(0, 0, 0, 255);
     let isFloodFill: boolean = false;
 
     useEffect(() => {
@@ -57,7 +57,7 @@ export default function Board() {
             onMoveEvent(clickEvent);
         }
 
-        const stopDrawing = () => {
+        const stopDrawing = (e: any) => {
             if (event && event !== undefined) {
                 Object.assign(event?.payload, path);
                 EventCache.addEvent(event);
@@ -70,7 +70,51 @@ export default function Board() {
         function onMoveEvent(moveEvent: any) {
             if (!isDrawing) return;
 
-            var position = getMousePositionInCanvas(moveEvent);
+            let position = getMousePositionInCanvas(moveEvent);
+
+            path.positions.push(position);
+
+            draw(position);
+        }
+
+        function startDrawingTouch(touchEvent: TouchEvent) {
+            if (isFloodFill) {
+                event = new DrawEvent(DrawEventType.FloodFillEvent);
+                const startingPixel = getTouchPositionInCanvas(touchEvent);
+                let payload = new FloodFillEvent(startingPixel, currentColor);
+                event.payload = payload;
+                EventCache.addEvent(event);
+                event = null;
+                floodFill(startingPixel, currentColor);
+                return;
+            }
+
+            ctx.lineWidth = lineWidth;
+            ctx.lineCap = lineCap;
+            ctx.strokeStyle = currentColor.rgbaToString();
+
+            event = new DrawEvent(DrawEventType.DrawEvent);
+            path = new Path(lineWidth, lineCap, currentColor);
+
+            isDrawing = true;
+            onTouchMoveEvent(touchEvent);
+        }
+
+        function stopDrawingTouch() {
+            if (event && event !== undefined) {
+                Object.assign(event?.payload, path);
+                EventCache.addEvent(event);
+                event = null;
+            }
+            isDrawing = false;
+            ctx.beginPath();
+        }
+
+        function onTouchMoveEvent(touchEvent: TouchEvent) {
+            if (!isDrawing) return;
+
+            // https://stackoverflow.com/questions/41993176/determine-touch-position-on-tablets-with-javascript
+            let position = getTouchPositionInCanvas(touchEvent);
 
             path.positions.push(position);
 
@@ -122,6 +166,17 @@ export default function Board() {
             };
         }
 
+        function getTouchPositionInCanvas(touchEvent: TouchEvent) {
+            var rect = canvas.getBoundingClientRect();
+            var scaleX = canvas.width / rect.width;
+            var scaleY = canvas.height / rect.height;
+            let touch = touchEvent.touches[0] || touchEvent.changedTouches[0];
+            return {
+                x: (touch.pageX - rect.left) * scaleX,
+                y: (touch.pageY - rect.top) * scaleY
+            };
+        }
+
         function undoLastAction() {
 
             if (EventCache.pastEvents.length === 0) return;
@@ -152,7 +207,7 @@ export default function Board() {
 
         // Source: https://stackoverflow.com/questions/53077955/how-do-i-do-flood-fill-on-the-html-canvas-in-javascript
         function floodFill(startingPixel: Position, color: Color) {
-
+            console.log(color);
             function getPixel(pixelData: any, x: number, y: number) {
                 if (x < 0 || y < 0 || x >= pixelData.width || y >= pixelData.height) {
                     return -1;
@@ -209,9 +264,10 @@ export default function Board() {
         canvas.addEventListener("mouseup", stopDrawing);
         canvas.addEventListener("mousemove", onMoveEvent);
         canvas.addEventListener("mouseout", stopDrawing);
-        canvas.addEventListener("touchstart", startDrawing);
-        canvas.addEventListener("touchend", stopDrawing);
-        canvas.addEventListener("touchmove", onMoveEvent);
+        canvas.addEventListener("touchstart", startDrawingTouch);
+        canvas.addEventListener("touchend", stopDrawingTouch);
+        canvas.addEventListener("touchmove", onTouchMoveEvent);
+        window.onresize = resize;
 
         document.addEventListener('keydown', (e) => {
             if (e.code === "KeyZ" && isControlPressed) {
