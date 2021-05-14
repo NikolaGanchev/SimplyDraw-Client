@@ -7,9 +7,14 @@ import ExpandMoreIcon from './resources/expand_more_black_24dp.svg';
 import ExpandLessIcon from './resources/expand_less_black_24dp.svg';
 import { useWindowDimensions } from "./Hooks";
 import MobileModal from "./MobileModal";
+import { useTranslation } from "react-i18next";
 
 export default function LineStyleInput(props: any) {
-    const [List, setList] = useState(["Fragment", "Square", "Round"]);
+    const [t] = useTranslation("common");
+    const fragmented = t("navbar.line.caps.fragmented");
+    const round = t("navbar.line.caps.round");
+    const square = t("navbar.line.caps.square");
+    const [List, setList] = useState([fragmented, square, round]);
     const [ArrowIcon, setArrowIcon] = useState(ExpandMoreIcon);
     const [label, setLabel] = useState(props.label);
     const [isListOpen, setIsListOpen] = useState(false);
@@ -31,15 +36,15 @@ export default function LineStyleInput(props: any) {
         setSelectedValue(newValue);
         let lineCap = null;
         switch (newValue) {
-            case "Fragment": {
+            case fragmented: {
                 lineCap = "butt";
                 break;
             }
-            case "Square": {
+            case square: {
                 lineCap = "square";
                 break;
             }
-            case "Round": {
+            case round: {
                 lineCap = "round";
                 break;
             }
@@ -75,7 +80,7 @@ export default function LineStyleInput(props: any) {
 
                 {
                     (isListOpen && width <= 1024) ?
-                        (<MobileModal header="Change line cap" onResponse={() => { setIsListOpen(false) }}><div className="relative flex self-end z-10 justify-end slim-scrollbar hover:bg-white">
+                        (<MobileModal header={t("navbar.line.mobile.headers.cap")} onResponse={() => { setIsListOpen(false) }}><div className="relative flex self-end z-10 justify-end slim-scrollbar hover:bg-white">
                             <div className="rounded-md mt-1 z-50 bg-white shadow-lg w-24 h-24 overflow-scroll overflow-x-hidden flex flex-col place-items-center">
                                 {List.map((entry: any, i: any) => {
                                     return (<button key={i} className="h-8 w-full hover:bg-gray-300 place-content-center flex transition-colors" onClick={() => { onItemClick(entry) }}>{entry}</button>);

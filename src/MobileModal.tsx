@@ -1,7 +1,9 @@
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function MobileModal(props: any) {
     const contentRef = useRef<HTMLDivElement>(null);
+    const [t] = useTranslation('common');
 
     function onTouch(e: any) {
         const content = contentRef.current
@@ -23,7 +25,7 @@ export default function MobileModal(props: any) {
                 </div>
                 <div className="w-full h-1/5 p-3 flex items-center justify-end space-x-1 ">
                     <button className="w-24 h-5/6 p-3 flex items-center justify-center bg-white text-black hover:bg-gray-300 rounded-md cursor-pointer" onClick={() => { props.onResponse(true) }}>
-                        <b>OK</b>
+                        <b>{t("answers.positive")}</b>
                     </button>
                 </div>
             </div>

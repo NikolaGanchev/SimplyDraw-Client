@@ -7,6 +7,7 @@ import ColorCircle from './ColorCircle';
 import Color from './Color';
 import { useWindowDimensions } from './Hooks';
 import MobileModal from './MobileModal';
+import { useTranslation } from 'react-i18next';
 
 export default function ColorMenu(props: any) {
     const [shouldShowMenu, setShouldShowMenu] = useState(false);
@@ -23,7 +24,7 @@ export default function ColorMenu(props: any) {
         new Color(0, 200, 0, 255),
         new Color(200, 0, 0, 255),
     ]
-
+    const [t] = useTranslation("common");
 
     function getColorBrightness(color: any): number {
         let rgb = color.rgb;
@@ -76,7 +77,7 @@ export default function ColorMenu(props: any) {
                     </div>) : (null)}
 
                 {(isClicked && width <= 1024) ? (
-                    <MobileModal header="Change color" onResponse={() => { setIsClicked(false) }}><SketchPicker className="h-1/2" color={color} onChange={onChangeColor}></SketchPicker></MobileModal>
+                    <MobileModal header={t("navbar.color.mobile.headers.color")} onResponse={() => { setIsClicked(false) }}><SketchPicker className="h-1/2" color={color} onChange={onChangeColor}></SketchPicker></MobileModal>
                 ) : (null)}
             </div>
         </div>

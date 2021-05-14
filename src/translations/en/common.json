@@ -1,0 +1,40 @@
+{
+    "app": {
+        "name": "Simply Draw"
+    },
+    "navbar": {
+        "erase": {
+            "clear": "Clear",
+            "confirmation": {
+                "question": "Are you sure you want to clear the canvas?",
+                "text": "All contents of the canvas will be cleared."
+            }
+        },
+        "line": {
+            "width": "Line width",
+            "cap": "Line cap",
+            "caps": {
+                "round": "Round",
+                "square": "Square",
+                "fragmented": "Fragment"
+            },
+            "mobile": {
+                "headers": {
+                    "width": "Change line width",
+                    "cap": "Change line cap"
+                }
+            }
+        },
+        "color": {
+            "mobile": {
+                "headers": {
+                    "color": "Change color"
+                }
+            }
+        }
+    },
+    "answers": {
+        "positive": "OK",
+        "negative": "Cancel"
+    }
+}

@@ -1,7 +1,9 @@
 import { useRef } from "react";
+import { useTranslation } from "react-i18next";
 
 export default function ConfirmAlert(props: any) {
     const contentRef = useRef<HTMLDivElement>(null);
+    const [t] = useTranslation('common');
 
     function onAnyClick(e: any) {
         const content = contentRef.current
@@ -23,10 +25,10 @@ export default function ConfirmAlert(props: any) {
                 </div>
                 <div className="w-full h-1/5 p-3 flex items-center justify-end space-x-1 ">
                     <button className="w-24 h-5/6 p-3 flex items-center justify-center  bg-white text-black hover:bg-gray-300 rounded-md" onClick={() => { props.onResponse(false) }}>
-                        <b>Cancel</b>
+                        <b>{t("answers.negative")}</b>
                     </button>
                     <button className="w-24 h-5/6 p-3 flex items-center justify-center bg-red-600 text-white hover:bg-red-700 rounded-md" onClick={() => { props.onResponse(true) }}>
-                        <b>OK</b>
+                        <b>{t("answers.positive")}</b>
                     </button>
                 </div>
             </div>
