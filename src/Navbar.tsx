@@ -10,7 +10,7 @@ import FloodFillButton from './FloodFillButton';
 
 export default function Navbar() {
     return (
-        <div className="flex h-12 shadow-md bg-white dark:bg-black w-full">
+        <div className="flex h-12 shadow-md bg-white dark:bg-black overflow-x-scroll overflow-y-hidden lg:overflow-visible">
             <h1 className="self-center ml-3 text-3xl select-none whitespace-nowrap">Simply Draw</h1>
             <div className="ml-auto mr-3 flex space-x-3">
                 <FloodFillButton></FloodFillButton>

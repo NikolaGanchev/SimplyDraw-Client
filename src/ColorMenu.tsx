@@ -5,6 +5,8 @@ import { SketchPicker } from 'react-color';
 import EventBus from './Events/EventBus';
 import ColorCircle from './ColorCircle';
 import Color from './Color';
+import { useWindowDimensions } from './Hooks';
+import MobileModal from './MobileModal';
 
 export default function ColorMenu(props: any) {
     const [shouldShowMenu, setShouldShowMenu] = useState(false);
@@ -12,6 +14,7 @@ export default function ColorMenu(props: any) {
     const [PickColorIcon, setPickColorIcon] = useState(PickColorIconLight);
     const ColorPickerRef: MutableRefObject<HTMLDivElement | null> = useRef(null);
     const [isClicked, setIsClicked] = useState(false);
+    const { height, width } = useWindowDimensions();
     const defaultColors = [
         new Color(0, 0, 0, 255),
         new Color(255, 255, 0, 255),
@@ -67,10 +70,14 @@ export default function ColorMenu(props: any) {
                 <div className="">
                     <button className="rounded-full w-10 h-10 flex items-center justify-center ml-auto" onClick={onMenuClick} style={{ backgroundColor: color.rgbaToString() }}><img src={PickColorIcon} className="w-6 h-6 select-none"></img></button>
                 </div >
-                {(shouldShowMenu) ? (
+                {(shouldShowMenu && width > 1024) ? (
                     <div className="relative flex self-end justify-end z-10" ref={ColorPickerRef}>
                         <SketchPicker className="absolute mt-1 z-50" color={color} onChange={onChangeColor}></SketchPicker>
                     </div>) : (null)}
+
+                {(isClicked && width <= 1024) ? (
+                    <MobileModal header="Change color" onResponse={() => { setIsClicked(false) }}><SketchPicker className="h-1/2" color={color} onChange={onChangeColor}></SketchPicker></MobileModal>
+                ) : (null)}
             </div>
         </div>
     );

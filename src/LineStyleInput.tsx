@@ -5,6 +5,8 @@ import { EVENTS } from './Events/EventBus';
 import Color from './Color';
 import ExpandMoreIcon from './resources/expand_more_black_24dp.svg';
 import ExpandLessIcon from './resources/expand_less_black_24dp.svg';
+import { useWindowDimensions } from "./Hooks";
+import MobileModal from "./MobileModal";
 
 export default function LineStyleInput(props: any) {
     const [List, setList] = useState(["Fragment", "Square", "Round"]);
@@ -13,6 +15,7 @@ export default function LineStyleInput(props: any) {
     const [isListOpen, setIsListOpen] = useState(false);
     const [borderColor, setBorderColor] = useState(props.defaultColor);
     const [selectedValue, setSelectedValue] = useState(props.default);
+    const { height, width } = useWindowDimensions();
 
     EventBus.subscribe(EVENTS.DRAWING_COLOR_CHANGE_REQUEST, (newColor: Color) => {
         setBorderColor(newColor.rgbaToString());
@@ -58,7 +61,7 @@ export default function LineStyleInput(props: any) {
                 </div>
                 <div className="h-full flex place-items-center justify-center w-1/4 rounded-md"><input type="image" src={ArrowIcon}></input></div>
                 {
-                    (isListOpen) ?
+                    (isListOpen && width > 1024) ?
                         (<div className="relative flex self-end z-10 justify-end slim-scrollbar hover:bg-white">
                             <div className="rounded-md absolute mt-1 z-50 bg-white shadow-lg w-24 h-24 overflow-scroll overflow-x-hidden flex flex-col place-items-center">
                                 {List.map((entry: any, i: any) => {
@@ -66,6 +69,19 @@ export default function LineStyleInput(props: any) {
                                 })}
                             </div>
                         </div>)
+
+                        : (null)
+                }
+
+                {
+                    (isListOpen && width <= 1024) ?
+                        (<MobileModal header="Change line cap" onResponse={() => { setIsListOpen(false) }}><div className="relative flex self-end z-10 justify-end slim-scrollbar hover:bg-white">
+                            <div className="rounded-md mt-1 z-50 bg-white shadow-lg w-24 h-24 overflow-scroll overflow-x-hidden flex flex-col place-items-center">
+                                {List.map((entry: any, i: any) => {
+                                    return (<button key={i} className="h-8 w-full hover:bg-gray-300 place-content-center flex transition-colors" onClick={() => { onItemClick(entry) }}>{entry}</button>);
+                                })}
+                            </div>
+                        </div></MobileModal>)
 
                         : (null)
                 }
