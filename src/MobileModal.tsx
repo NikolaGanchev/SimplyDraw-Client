@@ -4,8 +4,6 @@ export default function MobileModal(props: any) {
     const contentRef = useRef<HTMLDivElement>(null);
 
     function onTouch(e: any) {
-        console.log("e");
-
         const content = contentRef.current
         if (!content) return;
 

@@ -207,7 +207,6 @@ export default function Board() {
 
         // Source: https://stackoverflow.com/questions/53077955/how-do-i-do-flood-fill-on-the-html-canvas-in-javascript
         function floodFill(startingPixel: Position, color: Color) {
-            console.log(color);
             function getPixel(pixelData: any, x: number, y: number) {
                 if (x < 0 || y < 0 || x >= pixelData.width || y >= pixelData.height) {
                     return -1;
