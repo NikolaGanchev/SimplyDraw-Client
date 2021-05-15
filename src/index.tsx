@@ -6,7 +6,8 @@ import reportWebVitals from './reportWebVitals';
 import i18next from 'i18next';
 import { I18nextProvider } from 'react-i18next';
 import common_en from './translations/en/common.json';
-import common_bg from './translations/bg/common.json'
+import common_bg from './translations/bg/common.json';
+import { ContextProvider } from './SocketContext';
 
 i18next.init({
   interpolation: { escapeValue: false },
@@ -25,7 +26,9 @@ i18next.init({
 ReactDOM.render(
   <React.StrictMode>
     <I18nextProvider i18n={i18next}>
-      <App />
+      <ContextProvider>
+        <App />
+      </ContextProvider>
     </I18nextProvider>
   </React.StrictMode>,
   document.getElementById('root')

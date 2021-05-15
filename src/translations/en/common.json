@@ -36,5 +36,26 @@
     "answers": {
         "positive": "OK",
         "negative": "Cancel"
+    },
+    "group": {
+        "setup": {
+            "headers": {
+                "captcha": "Prove you are not a robot",
+                "room": "Let's start"
+            },
+            "rooms": {
+                "create": {
+                    "header": "Create room",
+                    "text": "Create your own room and have fun with your friends!",
+                    "success": "Room created!",
+                    "instructions": "Give the code below to your friends so they can join!"
+                },
+                "join": {
+                    "header": "Join room",
+                    "text": "Join someone else's room!",
+                    "success": "Room joined!"
+                }
+            }
+        }
     }
 }

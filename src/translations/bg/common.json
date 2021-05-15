@@ -36,5 +36,12 @@
     "answers": {
         "positive": "ОК",
         "negative": "Отменете"
+    },
+    "group": {
+        "setup": {
+            "headers": {
+                "captcha": "Докажете, че не сте робот"
+            }
+        }
     }
 }
