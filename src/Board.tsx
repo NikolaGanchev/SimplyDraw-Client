@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from 'react';
+import { useRef, useEffect, useState, useContext } from 'react';
 import EventBus from './Events/EventBus';
 import { EVENTS } from './Events/EventBus';
 import { saveAs } from 'file-saver';
@@ -10,6 +10,7 @@ import { DrawEventType } from './Events/DrawEventType';
 import EventCache from './Events/EventCache';
 import ColorABGR from './ColorABGR';
 import FloodFillEvent from './Events/FloodFillEvent';
+import { SocketContext } from './SocketContext';
 
 export default function Board() {
     const canvasRef = useRef(null);
@@ -19,6 +20,7 @@ export default function Board() {
     let currentColor: Color = new Color(0, 0, 0, 255);
     let selectedColor: Color = new Color(0, 0, 0, 255);
     let isFloodFill: boolean = false;
+    const { key, startServerConnection, createRoom, joinRoom, sendDrawEvent }: any = useContext(SocketContext);
 
     useEffect(() => {
         let isControlPressed = false;
@@ -41,6 +43,8 @@ export default function Board() {
                 let payload = new FloodFillEvent(startingPixel, currentColor);
                 event.payload = payload;
                 EventCache.addEvent(event);
+                sendDrawEvent(event);
+                console.log("sent draw event");
                 event = null;
                 floodFill(startingPixel, currentColor);
                 return;
@@ -61,6 +65,7 @@ export default function Board() {
             if (event && event !== undefined) {
                 Object.assign(event?.payload, path);
                 EventCache.addEvent(event);
+                sendDrawEvent(event);
                 event = null;
             }
             isDrawing = false;
@@ -84,6 +89,7 @@ export default function Board() {
                 let payload = new FloodFillEvent(startingPixel, currentColor);
                 event.payload = payload;
                 EventCache.addEvent(event);
+                sendDrawEvent(drawEvent);
                 event = null;
                 floodFill(startingPixel, currentColor);
                 return;
@@ -103,6 +109,7 @@ export default function Board() {
         function stopDrawingTouch() {
             if (event && event !== undefined) {
                 Object.assign(event?.payload, path);
+                sendDrawEvent(event);
                 EventCache.addEvent(event);
                 event = null;
             }
@@ -131,11 +138,13 @@ export default function Board() {
         function drawEvent(e: DrawEvent) {
             switch (e.type) {
                 case DrawEventType.DrawEvent: {
+                    let color = new Color(e.payload.color.r, e.payload.color.g, e.payload.color.b, e.payload.color.a);
                     ctx.lineWidth = e.payload.lineWidth;
                     ctx.lineCap = e.payload.lineCap;
-                    ctx.strokeStyle = e.payload.color.rgbaToString();
+                    ctx.strokeStyle = color.rgbaToString();
 
-                    e.payload.positions.forEach((e: Position) => {
+                    let positions: Position[] = e.payload.positions;
+                    positions.forEach((e: Position) => {
                         draw(e);
                     });
 
@@ -143,10 +152,12 @@ export default function Board() {
                     break;
                 }
                 case DrawEventType.FullEraseEvent: {
+                    console.log("EraseEvent");
                     clearCanvas();
                     break;
                 }
                 case DrawEventType.FloodFillEvent: {
+                    console.log("FloodFillEvent");
                     floodFill(e.payload.startingPixel, e.payload.fillColor);
                     break;
                 }
@@ -266,7 +277,6 @@ export default function Board() {
         canvas.addEventListener("touchstart", startDrawingTouch);
         canvas.addEventListener("touchend", stopDrawingTouch);
         canvas.addEventListener("touchmove", onTouchMoveEvent);
-        window.onresize = resize;
 
         document.addEventListener('keydown', (e) => {
             if (e.code === "KeyZ" && isControlPressed) {
@@ -311,6 +321,7 @@ export default function Board() {
         EventBus.subscribe(EVENTS.FULL_ERASE_REQUEST, () => {
             let event = new DrawEvent(DrawEventType.FullEraseEvent);
             EventCache.addEvent(event);
+            sendDrawEvent(event);
             clearCanvas();
         });
         EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, () => {
@@ -324,6 +335,20 @@ export default function Board() {
         });
         EventBus.subscribe(EVENTS.FLOOD_FILL_DISABLE_REQUEST, () => {
             isFloodFill = false;
+        });
+        EventBus.subscribe(EVENTS.JOINED_ROOM, () => {
+            clearCanvas();
+        });
+        EventBus.subscribe(EVENTS.EVENT_CACHE_SYNC, (newCache: typeof EventCache) => {
+            EventCache.set(newCache);
+
+            EventCache.pastEvents.forEach((e: DrawEvent) => {
+                drawEvent(e);
+            });
+        })
+        EventBus.subscribe(EVENTS.DRAW_EVENT, (e: DrawEvent) => {
+            EventCache.addEvent(e);
+            drawEvent(e);
         });
     });
 

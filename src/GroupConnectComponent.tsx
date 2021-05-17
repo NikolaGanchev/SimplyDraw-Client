@@ -19,6 +19,9 @@ export default function GroupConnectComponent(props: any) {
     const [isChoose, setIsChoose] = useState(false);
     const [isJoinRoom, setIsJoinRoom] = useState(false);
     const { key, startServerConnection, createRoom, joinRoom }: any = useContext(SocketContext);
+    const [isJoinDisabled, setIsJoinDisabled] = useState(false);
+    const nameInputRef = useRef<HTMLInputElement>(null);
+    const [name, setName] = useState("");
 
     function onClick() {
         setShowModal(true);
@@ -58,11 +61,17 @@ export default function GroupConnectComponent(props: any) {
     }
 
     function submitCode() {
-        if (inputRef && inputRef.current) {
+        if (inputRef && inputRef.current && nameInputRef && nameInputRef.current) {
             let value = inputRef.current.value;
-            joinRoom(value);
+            let name = nameInputRef.current.value;
+            joinRoom(value, name);
         }
     }
+
+    EventBus.subscribe(EVENTS.JOINED_ROOM, () => {
+        setIsJoinDisabled(true);
+        setShowModal(false);
+    });
 
     return (
         <div>
@@ -89,8 +98,10 @@ export default function GroupConnectComponent(props: any) {
                         ) : (null)}
                     {isJoinRoom ?
                         (
-                            <div><input value={joinRoomCode} type="text" maxLength={6} pattern="^[a-zA-Z]+$" onChange={handleCodeChange} className="p-3 border-2 border-black rounded-md" ref={inputRef}></input>
-                                <button className="bg-green-400 rounded-md p-3 ml-3" onClick={submitCode}>Join</button></div>
+                            <div><input type="text" maxLength={14} className="p-3 border-2 border-black rounded-md" ref={nameInputRef} placeholder="Name" disabled={isJoinDisabled}></input>
+                                <br></br>
+                                <input value={joinRoomCode} type="text" maxLength={6} pattern="^[a-zA-Z]+$" onChange={handleCodeChange} className="p-3 border-2 border-black rounded-md" ref={inputRef} placeholder="6 letter code" disabled={isJoinDisabled}></input>
+                                <button className="bg-green-400 rounded-md p-3 ml-3" onClick={submitCode} disabled={isJoinDisabled}>Join</button></div>
                         ) : (null)}
                 </ResponsiveContentModal>)
                 :

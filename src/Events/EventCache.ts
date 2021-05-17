@@ -39,6 +39,11 @@ class EventCache {
 
         return event!!;
     }
+
+    set(newCache: EventCache) {
+        this.futureEvents = newCache.futureEvents;
+        this.pastEvents = newCache.pastEvents;
+    }
 };
 
 export default new EventCache();
