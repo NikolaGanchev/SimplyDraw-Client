@@ -1,4 +1,4 @@
-import { useState, useContext } from "react";
+import React, { useState, useContext, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import IconButton from "./IconButton";
 import GroupIcon from './resources/group-fill.svg';
@@ -12,48 +12,87 @@ export default function GroupConnectComponent(props: any) {
     const [showModal, setShowModal] = useState(false);
     const [t] = useTranslation("common");
     const [header, setHeader] = useState(t("group.setup.headers.captcha"));
-    const [innerContent, setInnerContent] = useState((
-        <HCaptcha sitekey="10000000-ffff-ffff-ffff-000000000001" onVerify={onVerifyCaptcha} />
-    ));
-    const { key, setKey }: any = useContext(SocketContext);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const [isCaptcha, setIsCaptcha] = useState(true);
+    const [joinRoomCode, setJoinRoomCode] = useState("");
+    const [isCreateRoom, setIsCreateRoom] = useState(false);
+    const [isChoose, setIsChoose] = useState(false);
+    const [isJoinRoom, setIsJoinRoom] = useState(false);
+    const { key, startServerConnection, createRoom, joinRoom }: any = useContext(SocketContext);
 
     function onClick() {
         setShowModal(true);
     }
 
+
+
     function onVerifyCaptcha(token: any) {
-        EventBus.dispatchEvent(EVENTS.START_SERVER_CONNECTION_REQUEST, token);
+        startServerConnection(token);
     }
 
-    function createRoom() {
-        EventBus.dispatchEvent(EVENTS.CREATE_ROOM_REQUEST);
+    function handleCreateRoom() {
+        createRoom();
         EventBus.subscribe(EVENTS.ROOM_CREATED, (localKey: string) => {
-            setInnerContent(
-                (
-                    <div>{t("group.setup.rooms.create.instructions")} <br></br> <span className="text-xl"><b>{localKey}</b></span></div>
-                )
-            );
+            setIsChoose(false);
+            setIsCreateRoom(true);
             setHeader(t("group.setup.rooms.create.success"));
         });
     }
 
-    function joinRoom() {
-
+    function handleJoinRoom() {
+        setHeader(t("group.setup.rooms.join.header"));
+        setIsChoose(false);
+        setIsJoinRoom(true);
     }
 
     EventBus.subscribe(EVENTS.SUCCESSFUL_SERVER_CONNECTION, () => {
         setHeader(t("group.setup.headers.room"))
-        setInnerContent((<div>
-            <RoomOption header={t("group.setup.rooms.create.header")} text={t("group.setup.rooms.create.text")} onClick={createRoom}></RoomOption>
-            <RoomOption header={t("group.setup.rooms.join.header")} text={t("group.setup.rooms.join.text")} onClick={() => { }}></RoomOption>
-        </div>))
+        setIsCaptcha(false);
+        setIsChoose(true);
     });
+
+    function handleCodeChange(event: React.ChangeEvent<HTMLInputElement>) {
+        if (event.target.value.match("^[a-zA-Z]+$") != null) {
+            setJoinRoomCode(event.target.value.toUpperCase())
+        }
+    }
+
+    function submitCode() {
+        if (inputRef && inputRef.current) {
+            let value = inputRef.current.value;
+            joinRoom(value);
+        }
+    }
 
     return (
         <div>
             <IconButton icon={GroupIcon} onClick={onClick}></IconButton>
             {(showModal) ?
-                (<ResponsiveContentModal header={header} onResponse={() => { setShowModal(false) }}>{innerContent}</ResponsiveContentModal>)
+                (<ResponsiveContentModal header={header} onResponse={() => { setShowModal(false) }}>
+                    {isCaptcha ?
+                        (
+                            <HCaptcha sitekey="10000000-ffff-ffff-ffff-000000000001" onVerify={onVerifyCaptcha} />
+                        ) : (null)}
+
+                    {isChoose ?
+                        (
+                            <div>
+                                <RoomOption header={t("group.setup.rooms.create.header")} text={t("group.setup.rooms.create.text")} onClick={handleCreateRoom}></RoomOption>
+                                <RoomOption header={t("group.setup.rooms.join.header")} text={t("group.setup.rooms.join.text")} onClick={handleJoinRoom}></RoomOption>
+                            </div>
+                        ) : (null)}
+                    {isCreateRoom ?
+                        (
+                            <div>
+                                <div>{t("group.setup.rooms.create.instructions")} <br></br> <span className="text-xl"><b>{key}</b></span></div>
+                            </div>
+                        ) : (null)}
+                    {isJoinRoom ?
+                        (
+                            <div><input value={joinRoomCode} type="text" maxLength={6} pattern="^[a-zA-Z]+$" onChange={handleCodeChange} className="p-3 border-2 border-black rounded-md" ref={inputRef}></input>
+                                <button className="bg-green-400 rounded-md p-3 ml-3" onClick={submitCode}>Join</button></div>
+                        ) : (null)}
+                </ResponsiveContentModal>)
                 :
                 (null)
             }
