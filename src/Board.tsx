@@ -10,7 +10,6 @@ import { DrawEventType } from './Events/DrawEventType';
 import EventCache from './Events/EventCache';
 import ColorABGR from './ColorABGR';
 import FloodFillEvent from './Events/FloodFillEvent';
-import { SocketContext } from './SocketContext';
 
 export default function Board() {
     const canvasRef = useRef(null);
@@ -20,7 +19,6 @@ export default function Board() {
     let currentColor: Color = new Color(0, 0, 0, 255);
     let selectedColor: Color = new Color(0, 0, 0, 255);
     let isFloodFill: boolean = false;
-    const { key, startServerConnection, createRoom, joinRoom, sendDrawEvent }: any = useContext(SocketContext);
 
     useEffect(() => {
         let isControlPressed = false;
@@ -28,12 +26,17 @@ export default function Board() {
         const ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
         resize();
 
+        window.onresize = resize;
+
         let event: DrawEvent | null;
         let path: Path;
 
         function resize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+            EventCache.pastEvents.forEach((e: DrawEvent) => {
+                drawEvent(e);
+            })
         }
 
         const startDrawing = (clickEvent: any) => {
@@ -43,10 +46,9 @@ export default function Board() {
                 let payload = new FloodFillEvent(startingPixel, currentColor);
                 event.payload = payload;
                 EventCache.addEvent(event);
-                sendDrawEvent(event);
-                console.log("sent draw event");
-                event = null;
                 floodFill(startingPixel, currentColor);
+                sendDrawEvent(event);
+                event = null;
                 return;
             }
 
@@ -89,7 +91,7 @@ export default function Board() {
                 let payload = new FloodFillEvent(startingPixel, currentColor);
                 event.payload = payload;
                 EventCache.addEvent(event);
-                sendDrawEvent(drawEvent);
+                sendDrawEvent(event);
                 event = null;
                 floodFill(startingPixel, currentColor);
                 return;
@@ -218,6 +220,7 @@ export default function Board() {
 
         // Source: https://stackoverflow.com/questions/53077955/how-do-i-do-flood-fill-on-the-html-canvas-in-javascript
         function floodFill(startingPixel: Position, color: Color) {
+
             function getPixel(pixelData: any, x: number, y: number) {
                 if (x < 0 || y < 0 || x >= pixelData.width || y >= pixelData.height) {
                     return -1;
@@ -267,6 +270,14 @@ export default function Board() {
                 // put the data back
                 ctx.putImageData(imageData, 0, 0);
             }
+        }
+
+        // I would use the react context verison of his function directly
+        // However, the inclusion of useContext() in this file causes some very strange bugs
+        // Like canvas resetting and invoking floodFill() too much
+        // For this reason, im using the EventBus to communicate
+        function sendDrawEvent(drawEvent: DrawEvent) {
+            EventBus.dispatchEvent(EVENTS.SEND_DRAW_EVENT_REQUEST, drawEvent);
         }
 
         canvas.addEventListener("onresize", resize)
@@ -350,6 +361,12 @@ export default function Board() {
             EventCache.addEvent(e);
             drawEvent(e);
         });
+        EventBus.subscribe(EVENTS.REMOTE_REDO_REQUEST, () => {
+            doFutureAction();
+        });
+        EventBus.subscribe(EVENTS.REMOTE_UNDO_REQUEST, () => {
+            undoLastAction();
+        })
     });
 
     return (

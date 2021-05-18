@@ -34,10 +34,7 @@ const ContextProvider = ({ children }: any) => {
             if (connectionsContain(connections, from)) return;
 
             const peer = new Peer({ initiator: false, trickle: false });
-            let connection = new Connection(from, signal, name, peer);
-            connections.push(connection);
-            setConnections(connections);
-            answerJoinRequest(connection);
+            answerJoinRequest(from, signal, name, peer);
         });
     }
 
@@ -48,6 +45,9 @@ const ContextProvider = ({ children }: any) => {
             setKey(res.id);
             isHost = true;
             EventBus.dispatchEvent(EVENTS.ROOM_CREATED, res.id);
+            EventBus.subscribe(EVENTS.SEND_DRAW_EVENT_REQUEST, (drawEvent: DrawEvent) => {
+                sendDrawEvent(drawEvent);
+            });
         });
     }
 
@@ -58,42 +58,62 @@ const ContextProvider = ({ children }: any) => {
             socket.emit('joinroom', { userToCall: code, signalData: data, from: socket.id, name });
         });
 
-        peer.on("data", (data) => {
-            let networkingEvent: NetworkingEvent = JSON.parse(data);
-            consumeEvent(networkingEvent);
-        })
-
         socket.on('joinAccepted', (signal) => {
             isHost = false;
             peer.signal(signal);
             host = peer;
 
-            EventBus.dispatchEvent(EVENTS.JOINED_ROOM)
+            peer.on("data", (data) => {
+                console.log("received event");
+                let networkingEvent: NetworkingEvent = JSON.parse(data);
+                consumeEvent(networkingEvent);
+            });
+
+            peer.on("error", (err) => {
+                console.log(err);
+            })
+
+            EventBus.dispatchEvent(EVENTS.JOINED_ROOM);
+
+            EventBus.subscribe(EVENTS.SEND_DRAW_EVENT_REQUEST, (drawEvent: DrawEvent) => {
+                sendDrawEvent(drawEvent);
+            });
+
+            EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, (drawEvent: DrawEvent) => {
+                let obj: NetworkingEvent = {
+                    type: NetworkingEvents.UNDO_EVENT,
+                    payload: null
+                }
+                sendNetworkingEvent(obj);
+            });
+
+            EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, (drawEvent: DrawEvent) => {
+                let obj: NetworkingEvent = {
+                    type: NetworkingEvents.REDO_EVENT,
+                    payload: null
+                }
+                sendNetworkingEvent(obj);
+            });
         });
 
     }
 
-    function answerJoinRequest(connection: Connection) {
-
-        connection.peer.on('signal', (data) => {
-            socket.emit('answerJoinRequest', { signal: data, to: connection.from });
+    function answerJoinRequest(from: string, signal: any, name: string, peer: Peer.Instance) {
+        peer.on('signal', (data) => {
+            socket.emit('answerJoinRequest', { signal: data, to: from });
         });
 
-        connection.peer.signal(connection.signal);
+        peer.signal(signal);
 
-        connection.peer.on("connect", () => {
+        peer.on("connect", () => {
+            let connection = new Connection(from, signal, name, peer);
+            connections.push(connection);
+            setConnections(connections);
             let obj: NetworkingEvent = {
                 type: NetworkingEvents.NEW_USER_JOINED,
                 payload: connection.name
             }
 
-            // For an unknown reason, websockets decide to send more than one request for connection
-            // This means that more than the required peers are created
-            // The invalid peers raise an error if you try to send something to them
-            // So here the error is caught and the faulty peer is removed from the connection array
-            // This has been largely mitigated by the connectionsContain function
-            // However I'm still not exactly sure if it is 100% so I'm leaving this here
-            // The issue has now been resolved, so in a future commit this comment will be removed
             broadcast(connections, connection.from, obj);
 
             let objEventCache: NetworkingEvent = {
@@ -104,14 +124,42 @@ const ContextProvider = ({ children }: any) => {
             connection.peer.send(JSON.stringify(objEventCache));
 
             setConnections(connections);
+
+            peer.on("data", (data) => {
+                let networkingEvent: NetworkingEvent = JSON.parse(data);
+                if (networkingEvent.type === NetworkingEvents.DRAW_EVENT) {
+                    broadcast(connections, from, networkingEvent);
+                }
+                consumeEvent(networkingEvent);
+            })
+
+            peer.on("close", () => {
+                console.log(connections);
+                connections.splice(connections.indexOf(connection), 1);
+                console.log(connections);
+            });
+
+            EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, (drawEvent: DrawEvent) => {
+                let obj: NetworkingEvent = {
+                    type: NetworkingEvents.UNDO_EVENT,
+                    payload: null
+                }
+                broadcastToAll(connections, obj);
+            });
+
+            EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, (drawEvent: DrawEvent) => {
+                let obj: NetworkingEvent = {
+                    type: NetworkingEvents.REDO_EVENT,
+                    payload: null
+                }
+                broadcastToAll(connections, obj);
+            });
         })
 
-        connection.peer.on("data", (data) => {
-            let networkingEvent: NetworkingEvent = JSON.parse(data);
-            if (networkingEvent.type === NetworkingEvents.DRAW_EVENT) {
-                broadcast(connections, connection.from, networkingEvent);
-            }
-            consumeEvent(networkingEvent);
+
+
+        peer.on('error', (err) => {
+            console.log(connections);
         })
     }
 
@@ -123,12 +171,22 @@ const ContextProvider = ({ children }: any) => {
                 break;
             }
             case NetworkingEvents.EVENT_CACHE_SYNC: {
+                console.log("received event cache");
                 if (isHost) break;
                 EventBus.dispatchEvent(EVENTS.EVENT_CACHE_SYNC, networkingEvent.payload);
                 break;
             }
             case NetworkingEvents.DRAW_EVENT: {
                 EventBus.dispatchEvent(EVENTS.DRAW_EVENT, networkingEvent.payload);
+                break;
+            }
+            case NetworkingEvents.UNDO_EVENT: {
+                EventBus.dispatchEvent(EVENTS.REMOTE_UNDO_REQUEST);
+                break;
+            }
+            case NetworkingEvents.REDO_EVENT: {
+                EventBus.dispatchEvent(EVENTS.REMOTE_REDO_REQUEST);
+                break;
             }
         }
     }
@@ -148,13 +206,17 @@ const ContextProvider = ({ children }: any) => {
             payload: drawEvent
         }
 
+        sendNetworkingEvent(obj);
+    }
+
+    function sendNetworkingEvent(networkingEvent: NetworkingEvent) {
         if (connections.length === 0 && (host === null || host === undefined)) return;
 
         if (isHost) {
-            broadcastToAll(connections, obj);
+            broadcastToAll(connections, networkingEvent);
         }
         else {
-            host?.send(JSON.stringify(obj));
+            host?.send(JSON.stringify(networkingEvent));
         }
 
     }
