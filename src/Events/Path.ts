@@ -1,4 +1,4 @@
-import Color from "../Color";
+import Color from "../utils/Color";
 import Position from "./Position";
 
 export default class Path {

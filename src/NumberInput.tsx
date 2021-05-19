@@ -3,7 +3,7 @@ import EventBus from './Events/EventBus';
 import { EVENTS } from './Events/EventBus';
 import ExpandMoreIcon from './resources/expand_more_black_24dp.svg';
 import ExpandLessIcon from './resources/expand_less_black_24dp.svg';
-import Color from './Color';
+import Color from './utils/Color';
 import { useWindowDimensions } from './Hooks';
 import MobileModal from './MobileModal';
 import { useTranslation } from 'react-i18next';
@@ -51,7 +51,7 @@ export default function NumberInput(props: any) {
                     <input className="w-full focus:outline-none text-center h-full rounded-md self-center text-base" value={selectedValue} onChange={handleNumberChange}></input>
                 </label>
             </div>
-            <div className="h-full flex place-items-center justify-center w-1/4 border-l-2 hover:bg-gray-300 rounded-md" onClick={onButtonClick}><input type="image" src={ArrowIcon}></input></div>
+            <div className="h-full flex place-items-center justify-center w-1/4 border-l-2 hover:bg-gray-300 rounded-md transition-colors" onClick={onButtonClick}><input type="image" src={ArrowIcon}></input></div>
             {
                 (isListOpen && width > 1024) ?
                     (<div className="relative flex self-end z-10 justify-end slim-scrollbar hover:bg-white">

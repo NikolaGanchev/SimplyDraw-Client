@@ -53,7 +53,7 @@
                 "join": {
                     "header": "Join room",
                     "text": "Join someone else's room!",
-                    "success": "Room joined!"
+                    "success": "You have joined a room!"
                 }
             }
         }

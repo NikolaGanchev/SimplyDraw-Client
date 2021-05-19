@@ -3,5 +3,6 @@ export enum NetworkingEvents {
     EVENT_CACHE_SYNC = "eventCacheSync",
     DRAW_EVENT = "drawEvent",
     UNDO_EVENT = "undoEvent",
-    REDO_EVENT = "redoEvent"
+    REDO_EVENT = "redoEvent",
+    MEMBERS_SYNC = "membersSync"
 }

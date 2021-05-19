@@ -4,7 +4,7 @@ import PickColorIconLight from './resources/colorize_white_24dp.svg';
 import { SketchPicker } from 'react-color';
 import EventBus from './Events/EventBus';
 import ColorCircle from './ColorCircle';
-import Color from './Color';
+import Color from './utils/Color';
 import { useWindowDimensions } from './Hooks';
 import MobileModal from './MobileModal';
 import { useTranslation } from 'react-i18next';

@@ -2,13 +2,13 @@ import { useRef, useEffect, useState, useContext } from 'react';
 import EventBus from './Events/EventBus';
 import { EVENTS } from './Events/EventBus';
 import { saveAs } from 'file-saver';
-import Color from './Color';
+import Color from './utils/Color';
 import Position from './Events/Position';
 import Path from './Events/Path';
 import DrawEvent from './Events/DrawEvent';
 import { DrawEventType } from './Events/DrawEventType';
 import EventCache from './Events/EventCache';
-import ColorABGR from './ColorABGR';
+import ColorABGR from './utils/ColorABGR';
 import FloodFillEvent from './Events/FloodFillEvent';
 
 export default function Board() {

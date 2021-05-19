@@ -1,4 +1,4 @@
-import Color from "../Color";
+import Color from "../utils/Color";
 import { DrawEventType } from "./DrawEventType";
 import Path from "./Path";
 

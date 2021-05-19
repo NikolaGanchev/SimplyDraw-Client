@@ -2,7 +2,7 @@ import StyleButton from "./StyleButton";
 import { useState } from 'react';
 import EventBus from './Events/EventBus';
 import { EVENTS } from './Events/EventBus';
-import Color from './Color';
+import Color from './utils/Color';
 import ExpandMoreIcon from './resources/expand_more_black_24dp.svg';
 import ExpandLessIcon from './resources/expand_less_black_24dp.svg';
 import { useWindowDimensions } from "./Hooks";

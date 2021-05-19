@@ -9,6 +9,8 @@ import UndoRedoInput from './UndoRedoInput';
 import FloodFillButton from './FloodFillButton';
 import { useTranslation } from 'react-i18next';
 import GroupConnectComponent from './GroupConnectComponent';
+import AvataaarComponent from './AvataaarComponent';
+import Avataaar from './utils/Avataaar'
 
 export default function Navbar() {
     const [t] = useTranslation('common');

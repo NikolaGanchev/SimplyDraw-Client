@@ -47,6 +47,11 @@ export function EraseInput() {
         }
     }
 
+    EventBus.subscribe(EVENTS.DRAWING_COLOR_CHANGE_REQUEST, () => {
+        setEraserIsActive(false);
+        setBackground("#ffffff");
+    });
+
     return (
         <div><div>{(showModal) ? (<ConfirmAlert header={t("navbar.erase.confirmation.question")} onResponse={onModalResponse}>{t("navbar.erase.confirmation.text")} </ConfirmAlert>) : (null)}</div>
             <div className="flex space-x-1">

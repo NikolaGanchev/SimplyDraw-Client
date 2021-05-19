@@ -8,14 +8,19 @@ import NetworkingEvent from './Networking/NetworkingEvent';
 import { NetworkingEvents } from './Networking/NetworkingEvents';
 import EventCache from './Events/EventCache';
 import DrawEvent from './Events/DrawEvent';
+import Member from './Networking/Member';
+import Avataaar from './utils/Avataaar';
 
 const SocketContext = createContext({});
 
 const ContextProvider = ({ children }: any) => {
     const [key, setKey] = useState("");
-    const [me, setMe] = useState("");
+    const [me, setMe] = useState<Member>();
     const [connectionsState, setConnections] = useState<Array<Connection>>([]);
     const [name, setName] = useState("Default");
+    const [hasJoinedRoom, setHasJoinedRoom] = useState(false);
+    const [members, setMembers] = useState<Member[]>();
+    let internalMembers: Member[] = [];
     let isHost = false;
     let host: Peer.Instance;
     const connections: Connection[] = [];
@@ -48,6 +53,9 @@ const ContextProvider = ({ children }: any) => {
             EventBus.subscribe(EVENTS.SEND_DRAW_EVENT_REQUEST, (drawEvent: DrawEvent) => {
                 sendDrawEvent(drawEvent);
             });
+            let member = new Member(socket.id, name, new Avataaar);
+            setMe(member);
+            addMember(member);
         });
     }
 
@@ -61,38 +69,13 @@ const ContextProvider = ({ children }: any) => {
         socket.on('joinAccepted', (signal) => {
             isHost = false;
             peer.signal(signal);
-            host = peer;
-
-            peer.on("data", (data) => {
-                console.log("received event");
-                let networkingEvent: NetworkingEvent = JSON.parse(data);
-                consumeEvent(networkingEvent);
+            peer.on("connect", () => {
+                setUpConnectionAsClient(peer);
+                setMe(new Member(socket.id, name, new Avataaar));
             });
 
             peer.on("error", (err) => {
                 console.log(err);
-            })
-
-            EventBus.dispatchEvent(EVENTS.JOINED_ROOM);
-
-            EventBus.subscribe(EVENTS.SEND_DRAW_EVENT_REQUEST, (drawEvent: DrawEvent) => {
-                sendDrawEvent(drawEvent);
-            });
-
-            EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, (drawEvent: DrawEvent) => {
-                let obj: NetworkingEvent = {
-                    type: NetworkingEvents.UNDO_EVENT,
-                    payload: null
-                }
-                sendNetworkingEvent(obj);
-            });
-
-            EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, (drawEvent: DrawEvent) => {
-                let obj: NetworkingEvent = {
-                    type: NetworkingEvents.REDO_EVENT,
-                    payload: null
-                }
-                sendNetworkingEvent(obj);
             });
         });
 
@@ -109,58 +92,109 @@ const ContextProvider = ({ children }: any) => {
             let connection = new Connection(from, signal, name, peer);
             connections.push(connection);
             setConnections(connections);
+
+            let member = new Member(connection.from, name, new Avataaar);
+            addMember(member);
+
             let obj: NetworkingEvent = {
                 type: NetworkingEvents.NEW_USER_JOINED,
-                payload: connection.name
+                payload: member
             }
 
             broadcast(connections, connection.from, obj);
 
-            let objEventCache: NetworkingEvent = {
-                type: NetworkingEvents.EVENT_CACHE_SYNC,
-                payload: EventCache
-            }
-
-            connection.peer.send(JSON.stringify(objEventCache));
-
-            setConnections(connections);
-
-            peer.on("data", (data) => {
-                let networkingEvent: NetworkingEvent = JSON.parse(data);
-                if (networkingEvent.type === NetworkingEvents.DRAW_EVENT) {
-                    broadcast(connections, from, networkingEvent);
-                }
-                consumeEvent(networkingEvent);
-            })
-
-            peer.on("close", () => {
-                console.log(connections);
-                connections.splice(connections.indexOf(connection), 1);
-                console.log(connections);
-            });
-
-            EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, (drawEvent: DrawEvent) => {
-                let obj: NetworkingEvent = {
-                    type: NetworkingEvents.UNDO_EVENT,
-                    payload: null
-                }
-                broadcastToAll(connections, obj);
-            });
-
-            EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, (drawEvent: DrawEvent) => {
-                let obj: NetworkingEvent = {
-                    type: NetworkingEvents.REDO_EVENT,
-                    payload: null
-                }
-                broadcastToAll(connections, obj);
-            });
-        })
+            setUpConnectionAsHost(connection);
+        });
 
 
 
         peer.on('error', (err) => {
             console.log(connections);
+        });
+    }
+
+    function setUpConnectionAsHost(connection: Connection) {
+        let objEventCache: NetworkingEvent = {
+            type: NetworkingEvents.EVENT_CACHE_SYNC,
+            payload: EventCache
+        }
+
+        connection.peer.send(JSON.stringify(objEventCache));
+
+        let objMembers: NetworkingEvent = {
+            type: NetworkingEvents.MEMBERS_SYNC,
+            payload: internalMembers
+        }
+
+        connection.peer.send(JSON.stringify(objMembers));
+
+        setConnections(connections);
+
+        connection.peer.on("data", (data) => {
+            let networkingEvent: NetworkingEvent = JSON.parse(data);
+            if (networkingEvent.type === NetworkingEvents.DRAW_EVENT) {
+                broadcast(connections, connection.from, networkingEvent);
+            }
+            consumeEvent(networkingEvent);
         })
+
+        connection.peer.on("close", () => {
+            connections.splice(connections.indexOf(connection), 1);
+        });
+
+        EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, (drawEvent: DrawEvent) => {
+            let obj: NetworkingEvent = {
+                type: NetworkingEvents.UNDO_EVENT,
+                payload: null
+            }
+            sendNetworkingEvent(obj);
+        });
+
+        EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, (drawEvent: DrawEvent) => {
+            let obj: NetworkingEvent = {
+                type: NetworkingEvents.REDO_EVENT,
+                payload: null
+            }
+            sendNetworkingEvent(obj);
+        });
+    }
+
+    function setUpConnectionAsClient(peer: Peer.Instance) {
+        host = peer;
+
+        setHasJoinedRoom(true);
+
+        peer.on("data", (data) => {
+            console.log("received event");
+            let networkingEvent: NetworkingEvent = JSON.parse(data);
+            consumeEvent(networkingEvent);
+        });
+
+        EventBus.dispatchEvent(EVENTS.JOINED_ROOM);
+
+        EventBus.subscribe(EVENTS.SEND_DRAW_EVENT_REQUEST, (drawEvent: DrawEvent) => {
+            sendDrawEvent(drawEvent);
+        });
+
+        peer.on("close", () => {
+            setHasJoinedRoom(false);
+        });
+
+        EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, (drawEvent: DrawEvent) => {
+            let obj: NetworkingEvent = {
+                type: NetworkingEvents.UNDO_EVENT,
+                payload: null
+            }
+            sendNetworkingEvent(obj);
+        });
+
+        EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, (drawEvent: DrawEvent) => {
+            let obj: NetworkingEvent = {
+                type: NetworkingEvents.REDO_EVENT,
+                payload: null
+            }
+            sendNetworkingEvent(obj);
+        });
     }
 
     function consumeEvent(networkingEvent: NetworkingEvent) {
@@ -168,6 +202,8 @@ const ContextProvider = ({ children }: any) => {
             case NetworkingEvents.NEW_USER_JOINED: {
                 if (isHost) break;
                 EventBus.dispatchEvent(EVENTS.NEW_USER_JOINED, networkingEvent.payload);
+                console.log(networkingEvent.payload);
+                addMember(networkingEvent.payload);
                 break;
             }
             case NetworkingEvents.EVENT_CACHE_SYNC: {
@@ -186,6 +222,13 @@ const ContextProvider = ({ children }: any) => {
             }
             case NetworkingEvents.REDO_EVENT: {
                 EventBus.dispatchEvent(EVENTS.REMOTE_REDO_REQUEST);
+                break;
+            }
+            case NetworkingEvents.MEMBERS_SYNC: {
+                if (isHost) break;
+                console.log(networkingEvent);
+                internalMembers = networkingEvent.payload;
+                setMembers(networkingEvent.payload);
                 break;
             }
         }
@@ -221,7 +264,12 @@ const ContextProvider = ({ children }: any) => {
 
     }
 
-    return (<SocketContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent }}>{children}</SocketContext.Provider>)
+    function addMember(member: Member) {
+        internalMembers.push(member);
+        setMembers(internalMembers);
+    }
+
+    return (<SocketContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom }}>{children}</SocketContext.Provider>)
 }
 
 export { ContextProvider, SocketContext };
