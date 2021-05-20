@@ -4,5 +4,6 @@ export enum NetworkingEvents {
     DRAW_EVENT = "drawEvent",
     UNDO_EVENT = "undoEvent",
     REDO_EVENT = "redoEvent",
-    MEMBERS_SYNC = "membersSync"
+    MEMBERS_SYNC = "membersSync",
+    USER_LEFT = "userLeft"
 }

@@ -10,6 +10,7 @@ import { DrawEventType } from './Events/DrawEventType';
 import EventCache from './Events/EventCache';
 import ColorABGR from './utils/ColorABGR';
 import FloodFillEvent from './Events/FloodFillEvent';
+import Members from './Members';
 
 export default function Board() {
     const canvasRef = useRef(null);
@@ -370,6 +371,9 @@ export default function Board() {
     });
 
     return (
-        <canvas ref={canvasRef} className=""></canvas>
+        <div>
+            <Members></Members>
+            <canvas ref={canvasRef} className=""></canvas>
+        </div>
     );
 }

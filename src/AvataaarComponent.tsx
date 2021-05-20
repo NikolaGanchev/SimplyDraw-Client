@@ -21,22 +21,21 @@ export default function AvataaarComponent(props: any) {
     const [skinColor, setSkinColor] = useState(AvataaarOptions.skinColor[avatar.skinColor]);
 
     return (
-        <ResponsiveContentModal header="Avataaar">
-            <Avatar
-                avatarStyle='Transparent'
-                topType={topType}
-                accessoriesType={accessoriesType}
-                hairColor={hairColor}
-                facialHairType={facialHairType}
-                facialHairColor={facialHairColor}
-                clotheType={clotheType}
-                clotheColor={clotheColor}
-                graphicType={graphicType}
-                eyeType={eyeType}
-                eyebrowType={eyebrowType}
-                mouthType={mouthType}
-                skinColor={skinColor}
-            />
-        </ResponsiveContentModal>
+        <Avatar
+            avatarStyle='Circle'
+            topType={topType}
+            accessoriesType={accessoriesType}
+            hairColor={hairColor}
+            facialHairType={facialHairType}
+            facialHairColor={facialHairColor}
+            clotheType={clotheType}
+            clotheColor={clotheColor}
+            graphicType={graphicType}
+            eyeType={eyeType}
+            eyebrowType={eyebrowType}
+            mouthType={mouthType}
+            skinColor={skinColor}
+            style={{ width: '6rem', height: '6rem' }}
+        />
     )
 }

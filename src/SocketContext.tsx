@@ -10,6 +10,7 @@ import EventCache from './Events/EventCache';
 import DrawEvent from './Events/DrawEvent';
 import Member from './Networking/Member';
 import Avataaar from './utils/Avataaar';
+import { nanoid } from 'nanoid'
 
 const SocketContext = createContext({});
 
@@ -53,7 +54,7 @@ const ContextProvider = ({ children }: any) => {
             EventBus.subscribe(EVENTS.SEND_DRAW_EVENT_REQUEST, (drawEvent: DrawEvent) => {
                 sendDrawEvent(drawEvent);
             });
-            let member = new Member(socket.id, name, new Avataaar);
+            let member = new Member(nanoid(10), name, new Avataaar);
             setMe(member);
             addMember(member);
         });
@@ -71,7 +72,6 @@ const ContextProvider = ({ children }: any) => {
             peer.signal(signal);
             peer.on("connect", () => {
                 setUpConnectionAsClient(peer);
-                setMe(new Member(socket.id, name, new Avataaar));
             });
 
             peer.on("error", (err) => {
@@ -89,19 +89,9 @@ const ContextProvider = ({ children }: any) => {
         peer.signal(signal);
 
         peer.on("connect", () => {
-            let connection = new Connection(from, signal, name, peer);
+            let connection = new Connection(from, signal, name, peer, nanoid(10));
             connections.push(connection);
-            setConnections(connections);
-
-            let member = new Member(connection.from, name, new Avataaar);
-            addMember(member);
-
-            let obj: NetworkingEvent = {
-                type: NetworkingEvents.NEW_USER_JOINED,
-                payload: member
-            }
-
-            broadcast(connections, connection.from, obj);
+            setConnections([...connections]);
 
             setUpConnectionAsHost(connection);
         });
@@ -109,11 +99,22 @@ const ContextProvider = ({ children }: any) => {
 
 
         peer.on('error', (err) => {
-            console.log(connections);
+
         });
     }
 
     function setUpConnectionAsHost(connection: Connection) {
+
+        let member = new Member(connection.id, connection.name, new Avataaar());
+        addMember(member);
+
+        let newUserJoinedEvent: NetworkingEvent = {
+            type: NetworkingEvents.NEW_USER_JOINED,
+            payload: member
+        }
+
+        broadcast(connections, connection.from, newUserJoinedEvent);
+
         let objEventCache: NetworkingEvent = {
             type: NetworkingEvents.EVENT_CACHE_SYNC,
             payload: EventCache
@@ -140,6 +141,14 @@ const ContextProvider = ({ children }: any) => {
 
         connection.peer.on("close", () => {
             connections.splice(connections.indexOf(connection), 1);
+            let newUserJoinedEvent: NetworkingEvent = {
+                type: NetworkingEvents.USER_LEFT,
+                payload: member
+            }
+
+            removeMember(member);
+
+            broadcastToAll(connections, newUserJoinedEvent);
         });
 
         EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, (drawEvent: DrawEvent) => {
@@ -165,7 +174,6 @@ const ContextProvider = ({ children }: any) => {
         setHasJoinedRoom(true);
 
         peer.on("data", (data) => {
-            console.log("received event");
             let networkingEvent: NetworkingEvent = JSON.parse(data);
             consumeEvent(networkingEvent);
         });
@@ -178,6 +186,7 @@ const ContextProvider = ({ children }: any) => {
 
         peer.on("close", () => {
             setHasJoinedRoom(false);
+            setMembers(undefined);
         });
 
         EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, (drawEvent: DrawEvent) => {
@@ -202,12 +211,10 @@ const ContextProvider = ({ children }: any) => {
             case NetworkingEvents.NEW_USER_JOINED: {
                 if (isHost) break;
                 EventBus.dispatchEvent(EVENTS.NEW_USER_JOINED, networkingEvent.payload);
-                console.log(networkingEvent.payload);
                 addMember(networkingEvent.payload);
                 break;
             }
             case NetworkingEvents.EVENT_CACHE_SYNC: {
-                console.log("received event cache");
                 if (isHost) break;
                 EventBus.dispatchEvent(EVENTS.EVENT_CACHE_SYNC, networkingEvent.payload);
                 break;
@@ -226,9 +233,15 @@ const ContextProvider = ({ children }: any) => {
             }
             case NetworkingEvents.MEMBERS_SYNC: {
                 if (isHost) break;
-                console.log(networkingEvent);
                 internalMembers = networkingEvent.payload;
-                setMembers(networkingEvent.payload);
+                setMembers([...networkingEvent.payload]);
+                setMe(internalMembers[internalMembers.length - 1]);
+                break;
+            }
+            case NetworkingEvents.USER_LEFT: {
+                if (isHost) break;
+                let mem = networkingEvent.payload;
+                removeMember(mem);
                 break;
             }
         }
@@ -266,10 +279,15 @@ const ContextProvider = ({ children }: any) => {
 
     function addMember(member: Member) {
         internalMembers.push(member);
-        setMembers(internalMembers);
+        setMembers([...internalMembers]);
     }
 
-    return (<SocketContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom }}>{children}</SocketContext.Provider>)
+    function removeMember(member: Member) {
+        internalMembers.splice(internalMembers.indexOf(member));
+        setMembers([...internalMembers]);
+    }
+
+    return (<SocketContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members }}>{children}</SocketContext.Provider>)
 }
 
 export { ContextProvider, SocketContext };
