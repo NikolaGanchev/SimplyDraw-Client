@@ -40,61 +40,40 @@ export default function Board() {
             })
         }
 
-        const startDrawing = (clickEvent: any) => {
-            if (isFloodFill) {
-                event = new DrawEvent(DrawEventType.FloodFillEvent);
-                const startingPixel = getMousePositionInCanvas(clickEvent);
-                let payload = new FloodFillEvent(startingPixel, currentColor);
-                event.payload = payload;
-                EventCache.addEvent(event);
-                floodFill(startingPixel, currentColor);
-                sendDrawEvent(event);
-                event = null;
-                return;
-            }
-
-            ctx.lineWidth = lineWidth;
-            ctx.lineCap = lineCap;
-            ctx.strokeStyle = currentColor.rgbaToString();
-
-            event = new DrawEvent(DrawEventType.DrawEvent);
-            path = new Path(lineWidth, lineCap, currentColor);
-
-            isDrawing = true;
-            onMoveEvent(clickEvent);
+        const startDrawingMouse = (clickEvent: any) => {
+            startDrawing(clickEvent, getMousePositionInCanvas);
         }
 
-        const stopDrawing = (e: any) => {
-            if (event && event !== undefined) {
-                Object.assign(event?.payload, path);
-                EventCache.addEvent(event);
-                sendDrawEvent(event);
-                event = null;
-            }
-            isDrawing = false;
-            ctx.beginPath();
+        const stopDrawingMouse = (e: any) => {
+            stopDrawing();
         }
 
-        function onMoveEvent(moveEvent: any) {
-            if (!isDrawing) return;
-
-            let position = getMousePositionInCanvas(moveEvent);
-
-            path.positions.push(position);
-
-            draw(position);
+        function onMoveEventMouse(moveEvent: any) {
+            onMoveEvent(moveEvent, getMousePositionInCanvas);
         }
 
         function startDrawingTouch(touchEvent: TouchEvent) {
+            startDrawing(touchEvent, getTouchPositionInCanvas);
+        }
+
+        function stopDrawingTouch() {
+            stopDrawing();
+        }
+
+        function onMoveEventTouch(touchEvent: TouchEvent) {
+            onMoveEvent(touchEvent, getTouchPositionInCanvas);
+        }
+
+        function startDrawing(e: any, getPosition: (e: any) => { x: number, y: number }) {
             if (isFloodFill) {
                 event = new DrawEvent(DrawEventType.FloodFillEvent);
-                const startingPixel = getTouchPositionInCanvas(touchEvent);
+                const startingPixel = getPosition(e);
                 let payload = new FloodFillEvent(startingPixel, currentColor);
                 event.payload = payload;
                 EventCache.addEvent(event);
+                floodFill(startingPixel, currentColor);
                 sendDrawEvent(event);
                 event = null;
-                floodFill(startingPixel, currentColor);
                 return;
             }
 
@@ -106,29 +85,28 @@ export default function Board() {
             path = new Path(lineWidth, lineCap, currentColor);
 
             isDrawing = true;
-            onTouchMoveEvent(touchEvent);
+            onMoveEvent(e, getPosition);
         }
 
-        function stopDrawingTouch() {
-            if (event && event !== undefined) {
-                Object.assign(event?.payload, path);
-                sendDrawEvent(event);
-                EventCache.addEvent(event);
-                event = null;
-            }
-            isDrawing = false;
-            ctx.beginPath();
-        }
-
-        function onTouchMoveEvent(touchEvent: TouchEvent) {
+        function onMoveEvent(e: any, getPosition: (e: any) => { x: number, y: number }) {
             if (!isDrawing) return;
 
-            // https://stackoverflow.com/questions/41993176/determine-touch-position-on-tablets-with-javascript
-            let position = getTouchPositionInCanvas(touchEvent);
+            let position = getPosition(e);
 
             path.positions.push(position);
 
             draw(position);
+        }
+
+        function stopDrawing() {
+            if (event && event !== undefined) {
+                Object.assign(event?.payload, path);
+                EventCache.addEvent(event);
+                sendDrawEvent(event);
+                event = null;
+            }
+            isDrawing = false;
+            ctx.beginPath();
         }
 
         function draw(position: Position) {
@@ -180,6 +158,7 @@ export default function Board() {
             };
         }
 
+        // https://stackoverflow.com/questions/41993176/determine-touch-position-on-tablets-with-javascript
         function getTouchPositionInCanvas(touchEvent: TouchEvent) {
             var rect = canvas.getBoundingClientRect();
             var scaleX = canvas.width / rect.width;
@@ -282,13 +261,13 @@ export default function Board() {
         }
 
         canvas.addEventListener("onresize", resize)
-        canvas.addEventListener("mousedown", startDrawing);
-        canvas.addEventListener("mouseup", stopDrawing);
-        canvas.addEventListener("mousemove", onMoveEvent);
-        canvas.addEventListener("mouseout", stopDrawing);
+        canvas.addEventListener("mousedown", startDrawingMouse);
+        canvas.addEventListener("mouseup", stopDrawingMouse);
+        canvas.addEventListener("mousemove", onMoveEventMouse);
+        canvas.addEventListener("mouseout", stopDrawingMouse);
         canvas.addEventListener("touchstart", startDrawingTouch);
         canvas.addEventListener("touchend", stopDrawingTouch);
-        canvas.addEventListener("touchmove", onTouchMoveEvent);
+        canvas.addEventListener("touchmove", onMoveEventTouch);
 
         document.addEventListener('keydown', (e) => {
             if (e.code === "KeyZ" && isControlPressed) {
