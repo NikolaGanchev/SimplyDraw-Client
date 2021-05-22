@@ -47,12 +47,6 @@ export default function GroupConnectComponent(props: any) {
         setIsJoinRoom(true);
     }
 
-    EventBus.subscribe(EVENTS.SUCCESSFUL_SERVER_CONNECTION, () => {
-        setHeader(t("group.setup.headers.room"))
-        setIsCaptcha(false);
-        setIsChoose(true);
-    });
-
     function handleCodeChange(event: React.ChangeEvent<HTMLInputElement>) {
         if (event.target.value.match("^(?:[a-zA-Z]|)+$") != null) {
             setJoinRoomCode(event.target.value.toUpperCase())
@@ -66,6 +60,33 @@ export default function GroupConnectComponent(props: any) {
             joinRoom(value, name);
         }
     }
+
+    function resetState() {
+        setHeader(t("group.setup.headers.captcha"));
+        setIsCaptcha(true);
+        setIsChoose(false);
+        setIsCreateRoom(false);
+        setIsJoinRoom(false);
+        setJoinRoomCode("");
+        setName("");
+    }
+
+    EventBus.subscribe(EVENTS.SUCCESSFUL_SERVER_CONNECTION, () => {
+        setHeader(t("group.setup.headers.room"))
+        setIsCaptcha(false);
+        setIsChoose(true);
+    });
+
+    EventBus.subscribe(EVENTS.RESET_STATE_EVENT, () => {
+        resetState();
+    });
+
+    EventBus.subscribe(EVENTS.BECAME_HOST_EVENT, () => {
+        setIsJoinRoom(false);
+        setIsChoose(false);
+        setIsCreateRoom(true);
+        setHeader(t("group.setup.rooms.create.success"));
+    });
 
     return (
         <div>
