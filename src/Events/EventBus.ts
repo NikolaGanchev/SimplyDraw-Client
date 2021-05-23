@@ -28,31 +28,67 @@ export const EVENTS = {
 
 class EventBus {
 
-    private listeners: Map<string, Array<any>> = new Map()
+    private listeners: Map<string, Array<Event>> = new Map()
     EVENTS = EVENTS;
 
     constructor() {
         this.listeners = new Map();
     }
 
-    subscribe(eventName: string, callback: any) {
+    subscribe(eventName: string, callback: any, key = "") {
         if (this.listeners.has(eventName)) {
-            this.listeners.get(eventName)!.push(callback);
+            this.listeners.get(eventName)!.push(new Event(callback, key));
         }
         else {
-            this.listeners.set(eventName, [callback]);
+            this.listeners.set(eventName, [new Event(callback, key)]);
         }
+    }
+
+    unsubscribe(eventName: string, key: string) {
+        console.log(this.listeners);
+        if (this.listeners.has(eventName)) {
+            this.listeners.get(eventName)?.forEach((e: Event) => {
+                if (e.key === key) {
+                    this.listeners.get(eventName)!.splice(this.listeners.get(eventName)!.indexOf(e), 1);
+                }
+            })
+        }
+
+        console.log(this.listeners);
+    }
+
+    unsubscribeAll(key: string) {
+        console.log(this.listeners);
+        for (let [key, value] of this.listeners) {
+            value.forEach((e: Event) => {
+                if (e.key === key) {
+                    value.splice(value.indexOf(e), 1);
+                }
+            })
+        }
+
+        console.log(this.listeners);
     }
 
     dispatchEvent(eventName: string, ...callbackArgs: any[]) {
         if (this.listeners.has(eventName)) {
-            this.listeners.get(eventName)?.forEach(callback => {
-                callback(...callbackArgs);
-            })
+            this.listeners.get(eventName)?.forEach(event => {
+                event.callback(...callbackArgs);
+            });
         }
         else {
             return;
         }
+    }
+}
+
+class Event {
+    key: string;
+    callback: Function;
+
+    constructor(callback: any, key: string = "") {
+        this.key = key;
+        this.callback = callback;
     }
 }
 

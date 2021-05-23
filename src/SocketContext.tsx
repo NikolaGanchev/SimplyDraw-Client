@@ -26,12 +26,13 @@ const ContextProvider = ({ children }: any) => {
     let host: Peer.Instance | null;
     const connections: Connection[] = [];
     let socket: Socket | null;
-
+    let subscribedEvents = [];
+    const EVENT_BUS_KEY = "EVENT_BUS_KEY";
 
     function startServerConnection(token: any) {
         socket = io("http://localhost:5000", { query: { "captchaToken": token } });
 
-        socket.on("success", (res: any) => {
+        socket.once("success", (res: any) => {
             EventBus.dispatchEvent(EVENTS.SUCCESSFUL_SERVER_CONNECTION);
         });
 
@@ -48,19 +49,35 @@ const ContextProvider = ({ children }: any) => {
     function createRoom() {
         socket?.emit("createroom");
 
-        socket?.on("roomcreated", (res: any) => {
+        socket?.once("roomcreated", (res: any) => {
             setKey(res.id);
             isHost = true;
             EventBus.dispatchEvent(EVENTS.ROOM_CREATED, res.id);
             EventBus.subscribe(EVENTS.SEND_DRAW_EVENT_REQUEST, (drawEvent: DrawEvent) => {
                 sendDrawEvent(drawEvent);
-            });
+            }, EVENT_BUS_KEY);
             let member = new Member(nanoid(10), name, new Avataaar);
             setMe(member);
             addMember(member);
+
+            EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, (drawEvent: DrawEvent) => {
+                let obj: NetworkingEvent = {
+                    type: NetworkingEvents.UNDO_EVENT,
+                    payload: null
+                }
+                broadcastToAll(connections, obj);
+            }, EVENT_BUS_KEY);
+
+            EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, (drawEvent: DrawEvent) => {
+                let obj: NetworkingEvent = {
+                    type: NetworkingEvents.REDO_EVENT,
+                    payload: null
+                }
+                broadcastToAll(connections, obj);
+            }, EVENT_BUS_KEY);
         });
 
-        socket?.on("garbageCollected", () => {
+        socket?.once("garbageCollected", () => {
             disbandRoom();
         });
     }
@@ -76,11 +93,12 @@ const ContextProvider = ({ children }: any) => {
         setMe(undefined);
         setConnections([]);
         setHasJoinedRoom(false);
-        setMembers(undefined);
+        setMembers([]);
         internalMembers = [];
         isHost = false;
         host = null;
         connections.length = 0;
+        EventBus.unsubscribeAll(EVENT_BUS_KEY);
     }
 
     function resetState() {
@@ -94,7 +112,7 @@ const ContextProvider = ({ children }: any) => {
         host = null;
         connections.length = 0;
         socket = null;
-
+        EventBus.unsubscribeAll(EVENT_BUS_KEY);
         EventBus.dispatchEvent(EVENTS.RESET_STATE_EVENT);
     }
 
@@ -105,7 +123,7 @@ const ContextProvider = ({ children }: any) => {
             socket?.emit('joinroom', { userToCall: code, signalData: data, from: socket.id, name });
         });
 
-        socket?.on('joinAccepted', (signal) => {
+        socket?.once('joinAccepted', (signal) => {
             isHost = false;
             peer.signal(signal);
             peer.on("connect", () => {
@@ -117,13 +135,13 @@ const ContextProvider = ({ children }: any) => {
             });
         });
 
-        socket?.on("hostMigration", () => {
+        socket?.once("hostMigration", () => {
             leaveRoom();
 
             joinRoom(code, name);
         });
 
-        socket?.on("becomeHost", () => {
+        socket?.once("becomeHost", () => {
             leaveRoom();
             EventBus.dispatchEvent(EVENTS.BECAME_HOST_EVENT);
             setKey(code);
@@ -131,10 +149,26 @@ const ContextProvider = ({ children }: any) => {
             EventBus.dispatchEvent(EVENTS.ROOM_CREATED, code);
             EventBus.subscribe(EVENTS.SEND_DRAW_EVENT_REQUEST, (drawEvent: DrawEvent) => {
                 sendDrawEvent(drawEvent);
-            });
+            }, EVENT_BUS_KEY);
             let member = new Member(nanoid(10), name, new Avataaar);
             setMe(member);
             addMember(member);
+
+            EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, (drawEvent: DrawEvent) => {
+                let obj: NetworkingEvent = {
+                    type: NetworkingEvents.UNDO_EVENT,
+                    payload: null
+                }
+                broadcastToAll(connections, obj);
+            }, EVENT_BUS_KEY);
+
+            EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, (drawEvent: DrawEvent) => {
+                let obj: NetworkingEvent = {
+                    type: NetworkingEvents.REDO_EVENT,
+                    payload: null
+                }
+                broadcastToAll(connections, obj);
+            }, EVENT_BUS_KEY);
         });
     }
 
@@ -145,7 +179,7 @@ const ContextProvider = ({ children }: any) => {
 
         peer.signal(signal);
 
-        peer.on("connect", () => {
+        peer.once("connect", () => {
             let connection = new Connection(from, name, peer, nanoid(10));
             connections.push(connection);
             setConnections([...connections]);
@@ -157,7 +191,7 @@ const ContextProvider = ({ children }: any) => {
 
 
 
-        peer.on('error', (err) => {
+        peer.once('error', (err) => {
             console.log(err);
         });
     }
@@ -199,13 +233,13 @@ const ContextProvider = ({ children }: any) => {
         // Setting up peer listeners
         connection.peer.on("data", (data) => {
             let networkingEvent: NetworkingEvent = JSON.parse(data);
-            if (networkingEvent.type === NetworkingEvents.DRAW_EVENT) {
+            if (networkingEvent.type === NetworkingEvents.DRAW_EVENT || NetworkingEvents.REDO_EVENT || NetworkingEvents.UNDO_EVENT) {
                 broadcast(connections, connection.from, networkingEvent);
             }
             consumeEvent(networkingEvent);
         })
 
-        connection.peer.on("close", () => {
+        connection.peer.once("close", () => {
             connections.splice(connections.indexOf(connection), 1);
             let newUserJoinedEvent: NetworkingEvent = {
                 type: NetworkingEvents.MEMBER_LEFT,
@@ -218,23 +252,6 @@ const ContextProvider = ({ children }: any) => {
             broadcastToAll(connections, newUserJoinedEvent);
         });
 
-
-        // Setting up EventBus listeners
-        EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, (drawEvent: DrawEvent) => {
-            let obj: NetworkingEvent = {
-                type: NetworkingEvents.UNDO_EVENT,
-                payload: null
-            }
-            sendNetworkingEvent(obj);
-        });
-
-        EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, (drawEvent: DrawEvent) => {
-            let obj: NetworkingEvent = {
-                type: NetworkingEvents.REDO_EVENT,
-                payload: null
-            }
-            sendNetworkingEvent(obj);
-        });
     }
 
     function setUpConnectionAsClient(peer: Peer.Instance) {
@@ -244,9 +261,9 @@ const ContextProvider = ({ children }: any) => {
             consumeEvent(networkingEvent);
         });
 
-        peer.on("close", () => {
-            setHasJoinedRoom(false);
-            setMembers(undefined);
+        peer.once("close", () => {
+            peer.removeAllListeners("data");
+            // Host migration should happen automatically
         });
 
         // Setting up context and EventBus listeners
@@ -258,14 +275,14 @@ const ContextProvider = ({ children }: any) => {
 
         EventBus.subscribe(EVENTS.SEND_DRAW_EVENT_REQUEST, (drawEvent: DrawEvent) => {
             sendDrawEvent(drawEvent);
-        });
+        }, EVENT_BUS_KEY);
         EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, (drawEvent: DrawEvent) => {
             let obj: NetworkingEvent = {
                 type: NetworkingEvents.UNDO_EVENT,
                 payload: null
             }
             sendNetworkingEvent(obj);
-        });
+        }, EVENT_BUS_KEY);
 
         EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, (drawEvent: DrawEvent) => {
             let obj: NetworkingEvent = {
@@ -273,7 +290,7 @@ const ContextProvider = ({ children }: any) => {
                 payload: null
             }
             sendNetworkingEvent(obj);
-        });
+        }, EVENT_BUS_KEY);
     }
 
     function consumeEvent(networkingEvent: NetworkingEvent) {
@@ -290,6 +307,7 @@ const ContextProvider = ({ children }: any) => {
                 break;
             }
             case NetworkingEvents.DRAW_EVENT: {
+                console.log("draw Event" + " " + JSON.stringify(networkingEvent.payload));
                 EventBus.dispatchEvent(EVENTS.DRAW_EVENT, networkingEvent.payload);
                 break;
             }

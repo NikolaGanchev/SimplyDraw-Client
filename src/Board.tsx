@@ -133,12 +133,10 @@ export default function Board() {
                     break;
                 }
                 case DrawEventType.FullEraseEvent: {
-                    console.log("EraseEvent");
                     clearCanvas();
                     break;
                 }
                 case DrawEventType.FloodFillEvent: {
-                    console.log("FloodFillEvent");
                     floodFill(e.payload.startingPixel, e.payload.fillColor);
                     break;
                 }
