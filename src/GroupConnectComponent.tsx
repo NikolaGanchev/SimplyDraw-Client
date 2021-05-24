@@ -121,7 +121,7 @@ export default function GroupConnectComponent(props: any) {
                     {hasJoinedRoom ?
                         (
                             <div>
-                                <div>{t("group.setup.rooms.join.success")}</div>
+                                <div> {t("group.setup.rooms.join.success")}</div>
                             </div>
                         ) : (null)}
                 </ResponsiveContentModal>)

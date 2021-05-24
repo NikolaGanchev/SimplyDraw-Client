@@ -130,8 +130,10 @@ const ContextProvider = ({ children }: any) => {
                 setUpConnectionAsClient(peer);
             });
 
+            setKey(code);
+
             peer.on("error", (err) => {
-                console.log(err);
+                console.error(err);
             });
         });
 
@@ -192,7 +194,7 @@ const ContextProvider = ({ children }: any) => {
 
 
         peer.once('error', (err) => {
-            console.log(err);
+            console.error(err);
         });
     }
 
@@ -240,6 +242,7 @@ const ContextProvider = ({ children }: any) => {
         })
 
         connection.peer.once("close", () => {
+            EventBus.unsubscribeAll(EVENT_BUS_KEY);
             connections.splice(connections.indexOf(connection), 1);
             let newUserJoinedEvent: NetworkingEvent = {
                 type: NetworkingEvents.MEMBER_LEFT,
@@ -307,7 +310,6 @@ const ContextProvider = ({ children }: any) => {
                 break;
             }
             case NetworkingEvents.DRAW_EVENT: {
-                console.log("draw Event" + " " + JSON.stringify(networkingEvent.payload));
                 EventBus.dispatchEvent(EVENTS.DRAW_EVENT, networkingEvent.payload);
                 break;
             }

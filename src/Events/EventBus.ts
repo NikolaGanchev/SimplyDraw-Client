@@ -57,17 +57,15 @@ class EventBus {
         console.log(this.listeners);
     }
 
-    unsubscribeAll(key: string) {
-        console.log(this.listeners);
+    unsubscribeAll(keyToCheck: string) {
         for (let [key, value] of this.listeners) {
-            value.forEach((e: Event) => {
-                if (e.key === key) {
+            for (let e of value) {
+                if (e.key === keyToCheck) {
                     value.splice(value.indexOf(e), 1);
                 }
-            })
+            }
+            this.listeners.set(key, value);
         }
-
-        console.log(this.listeners);
     }
 
     dispatchEvent(eventName: string, ...callbackArgs: any[]) {
