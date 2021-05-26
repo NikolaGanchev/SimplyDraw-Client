@@ -26,7 +26,6 @@ const ContextProvider = ({ children }: any) => {
     let host: Peer.Instance | null;
     const connections: Connection[] = [];
     let socket: Socket | null;
-    let subscribedEvents = [];
     const EVENT_BUS_KEY = "EVENT_BUS_KEY";
 
     function startServerConnection(token: any) {
@@ -89,13 +88,13 @@ const ContextProvider = ({ children }: any) => {
     }
 
     function leaveRoom() {
+        isHost = false;
         setKey("");
         setMe(undefined);
         setConnections([]);
         setHasJoinedRoom(false);
         setMembers([]);
         internalMembers = [];
-        isHost = false;
         host = null;
         connections.length = 0;
         EventBus.unsubscribeAll(EVENT_BUS_KEY);
@@ -126,7 +125,7 @@ const ContextProvider = ({ children }: any) => {
         socket?.once('joinAccepted', (signal) => {
             isHost = false;
             peer.signal(signal);
-            peer.on("connect", () => {
+            peer.once("connect", () => {
                 setUpConnectionAsClient(peer);
             });
 
@@ -138,6 +137,7 @@ const ContextProvider = ({ children }: any) => {
         });
 
         socket?.once("hostMigration", () => {
+            if (isHost) return;
             leaveRoom();
 
             joinRoom(code, name);
@@ -152,6 +152,7 @@ const ContextProvider = ({ children }: any) => {
             EventBus.subscribe(EVENTS.SEND_DRAW_EVENT_REQUEST, (drawEvent: DrawEvent) => {
                 sendDrawEvent(drawEvent);
             }, EVENT_BUS_KEY);
+
             let member = new Member(nanoid(10), name, new Avataaar);
             setMe(member);
             addMember(member);
@@ -193,7 +194,7 @@ const ContextProvider = ({ children }: any) => {
 
 
 
-        peer.once('error', (err) => {
+        peer.on('error', (err) => {
             console.error(err);
         });
     }
@@ -242,7 +243,6 @@ const ContextProvider = ({ children }: any) => {
         })
 
         connection.peer.once("close", () => {
-            EventBus.unsubscribeAll(EVENT_BUS_KEY);
             connections.splice(connections.indexOf(connection), 1);
             let newUserJoinedEvent: NetworkingEvent = {
                 type: NetworkingEvents.MEMBER_LEFT,
@@ -368,6 +368,7 @@ const ContextProvider = ({ children }: any) => {
     }
 
     function addMember(member: Member) {
+        if (hasMember(member)) return;
         internalMembers.push(member);
         setMembers([...internalMembers]);
     }
@@ -375,6 +376,16 @@ const ContextProvider = ({ children }: any) => {
     function removeMember(member: Member) {
         internalMembers.splice(internalMembers.indexOf(member));
         setMembers([...internalMembers]);
+    }
+
+    function hasMember(member: Member) {
+        for (let m of internalMembers) {
+            if (m == member) {
+                return true;
+            }
+        }
+
+        return false;
     }
 
     return (<SocketContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members }}>{children}</SocketContext.Provider>)
