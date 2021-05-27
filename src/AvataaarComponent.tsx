@@ -1,8 +1,6 @@
 import Avatar from 'avataaars'
 import { useState } from 'react';
-import ResponsiveContentModal from "./ResponsiveContentModal";
 import { AvataaarOptions } from './utils/Avataaar';
-import Avataaar from './utils/Avataaar';
 
 export default function AvataaarComponent(props: any) {
     let avatar = props.avatar;

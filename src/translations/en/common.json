@@ -56,6 +56,14 @@
                     "success": "You have joined a room!"
                 }
             }
+        },
+        "members": {
+            "isMuted": " is muted",
+            "isNotMuted": " is not muted",
+            "mute": {
+                "title": "Mute",
+                "explanation": "(When you mute a member no one sees their actions. They are notified.)"
+            }
         }
     }
 }

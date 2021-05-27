@@ -21,12 +21,14 @@ const ContextProvider = ({ children }: any) => {
     const [name, setName] = useState("Default");
     const [hasJoinedRoom, setHasJoinedRoom] = useState(false);
     const [members, setMembers] = useState<Member[]>();
+    const [isHostState, setIsHostState] = useState(false);
     let internalMembers: Member[] = [];
     let isHost = false;
     let host: Peer.Instance | null;
     const connections: Connection[] = [];
     let socket: Socket | null;
     const EVENT_BUS_KEY = "EVENT_BUS_KEY";
+    let mutedIds: string[] = [];
 
     function startServerConnection(token: any) {
         socket = io("http://localhost:5000", { query: { "captchaToken": token } });
@@ -51,6 +53,7 @@ const ContextProvider = ({ children }: any) => {
         socket?.once("roomcreated", (res: any) => {
             setKey(res.id);
             isHost = true;
+            setIsHostState(true);
             EventBus.dispatchEvent(EVENTS.ROOM_CREATED, res.id);
             EventBus.subscribe(EVENTS.SEND_DRAW_EVENT_REQUEST, (drawEvent: DrawEvent) => {
                 sendDrawEvent(drawEvent);
@@ -89,6 +92,7 @@ const ContextProvider = ({ children }: any) => {
 
     function leaveRoom() {
         isHost = false;
+        setIsHostState(false);
         setKey("");
         setMe(undefined);
         setConnections([]);
@@ -108,6 +112,7 @@ const ContextProvider = ({ children }: any) => {
         setMembers(undefined);
         internalMembers = [];
         isHost = false;
+        setIsHostState(false);
         host = null;
         connections.length = 0;
         socket = null;
@@ -124,6 +129,7 @@ const ContextProvider = ({ children }: any) => {
 
         socket?.once('joinAccepted', (signal) => {
             isHost = false;
+            setIsHostState(false);
             peer.signal(signal);
             peer.once("connect", () => {
                 setUpConnectionAsClient(peer);
@@ -148,6 +154,7 @@ const ContextProvider = ({ children }: any) => {
             EventBus.dispatchEvent(EVENTS.BECAME_HOST_EVENT);
             setKey(code);
             isHost = true;
+            setIsHostState(true);
             EventBus.dispatchEvent(EVENTS.ROOM_CREATED, code);
             EventBus.subscribe(EVENTS.SEND_DRAW_EVENT_REQUEST, (drawEvent: DrawEvent) => {
                 sendDrawEvent(drawEvent);
@@ -235,6 +242,9 @@ const ContextProvider = ({ children }: any) => {
 
         // Setting up peer listeners
         connection.peer.on("data", (data) => {
+            if (mutedIds.indexOf(connection.id) !== -1) {
+                return;
+            }
             let networkingEvent: NetworkingEvent = JSON.parse(data);
             if (networkingEvent.type === NetworkingEvents.DRAW_EVENT || NetworkingEvents.REDO_EVENT || NetworkingEvents.UNDO_EVENT) {
                 broadcast(connections, connection.from, networkingEvent);
@@ -388,7 +398,32 @@ const ContextProvider = ({ children }: any) => {
         return false;
     }
 
-    return (<SocketContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members }}>{children}</SocketContext.Provider>)
+    function getMemberIndexByIdFromState(id: string): number {
+        if (!members) return -1;
+        let index = -1;
+        for (let i = 0; i < members.length; i++) {
+            if (members[i].id == id) {
+                index = i;
+                break;
+            }
+        }
+
+        return index;
+    }
+
+    function toggleMute(member: Member, isMuted: boolean) {
+        if (!members) return;
+        members[members.indexOf(member)].isMuted = isMuted;
+        if (isMuted) {
+            mutedIds.push(members[members.indexOf(member)].id);
+        }
+        else {
+            mutedIds.splice(mutedIds.indexOf(members[members.indexOf(member)].id), 1);
+        }
+        setMembers([...members]);
+    }
+
+    return (<SocketContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members, toggleMute, isHostState }}>{children}</SocketContext.Provider>)
 }
 
 export { ContextProvider, SocketContext };

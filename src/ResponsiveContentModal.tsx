@@ -19,7 +19,7 @@ export default function ResponsiveContentModal(props: any) {
                 <div className="w-full h-1/5 p-3 border-b-2 flex align-middle text-start items-center">
                     <h1 className="text-xl">{props.header}</h1>
                 </div>
-                <div className="w-full h-3/5 p-3 border-b-2 flex align-middle text-start justify-center">
+                <div className="w-full h-3/5 p-3 border-b-2 flex align-middle text-start justify-center place-items-center flex-col">
                     {props.children}
                 </div>
             </div>
