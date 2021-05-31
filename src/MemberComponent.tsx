@@ -1,4 +1,4 @@
-import { ChangeEventHandler, useContext, useRef, useState } from "react";
+import { useContext, useState } from "react";
 import { useTranslation } from "react-i18next";
 import AvataaarComponent from "./AvataaarComponent";
 import Member from "./Networking/Member";
@@ -10,7 +10,7 @@ export default function MemberComponent(props: any) {
     const [showDetails, setShowDetails] = useState(false);
     const [t] = useTranslation("common");
 
-    const { isHostState, toggleMute }: any = useContext(SocketContext);
+    const { isHostState, toggleMute, me }: any = useContext(SocketContext);
 
     function onToggle(e: React.ChangeEvent<HTMLInputElement>) {
         if (e.target) {
@@ -28,12 +28,12 @@ export default function MemberComponent(props: any) {
                         :
                         (<span>{member.name + t("group.members.isNotMuted")}</span>)
                     }
-                    {(isHostState) ?
+                    {(isHostState && member.id !== me.id) ?
                         (
                             <div>
                                 <label>
                                     {t("group.members.mute.title")}
-                                    <input type="checkbox" onChange={onToggle}></input>
+                                    <input type="checkbox" checked={member.isMuted} onChange={onToggle}></input>
 
                                 </label>
                                 <br></br>

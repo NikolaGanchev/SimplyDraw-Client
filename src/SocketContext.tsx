@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import Peer from 'simple-peer';
-import { createContext, useContext, useEffect, useState } from 'react';
+import { createContext, useContext, useEffect, useRef, useState } from 'react';
 import EventBus, { EVENTS } from './Events/EventBus';
 import Connection from './Networking/Connection';
 import { broadcast, broadcastToAll } from './Networking/Utils';
@@ -17,18 +17,19 @@ const SocketContext = createContext({});
 const ContextProvider = ({ children }: any) => {
     const [key, setKey] = useState("");
     const [me, setMe] = useState<Member>();
-    const [connectionsState, setConnections] = useState<Array<Connection>>([]);
     const [name, setName] = useState("Default");
     const [hasJoinedRoom, setHasJoinedRoom] = useState(false);
     const [members, setMembers] = useState<Member[]>();
     const [isHostState, setIsHostState] = useState(false);
-    let internalMembers: Member[] = [];
+    let internalMembers = useRef<Member[]>([]);
+    const mutedIds = useRef<string[]>([]);
+    const meRef = useRef<Member>();
     let isHost = false;
     let host: Peer.Instance | null;
-    const connections: Connection[] = [];
+    const connections = useRef<Connection[]>([]);
     let socket: Socket | null;
     const EVENT_BUS_KEY = "EVENT_BUS_KEY";
-    let mutedIds: string[] = [];
+
 
     function startServerConnection(token: any) {
         socket = io("http://localhost:5000", { query: { "captchaToken": token } });
@@ -39,7 +40,7 @@ const ContextProvider = ({ children }: any) => {
 
         socket.on('joinroom', ({ from, signal, name }: any) => {
             // Check if websockets did't send the request more than one time
-            if (connectionsContain(connections, from)) return;
+            if (connectionsContain(connections.current, from)) return;
 
             const peer = new Peer({ initiator: false, trickle: false });
             answerJoinRequest(from, signal, name, peer);
@@ -67,7 +68,7 @@ const ContextProvider = ({ children }: any) => {
                     type: NetworkingEvents.UNDO_EVENT,
                     payload: null
                 }
-                broadcastToAll(connections, obj);
+                broadcastToAll(connections.current, obj);
             }, EVENT_BUS_KEY);
 
             EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, (drawEvent: DrawEvent) => {
@@ -75,7 +76,7 @@ const ContextProvider = ({ children }: any) => {
                     type: NetworkingEvents.REDO_EVENT,
                     payload: null
                 }
-                broadcastToAll(connections, obj);
+                broadcastToAll(connections.current, obj);
             }, EVENT_BUS_KEY);
         });
 
@@ -95,27 +96,26 @@ const ContextProvider = ({ children }: any) => {
         setIsHostState(false);
         setKey("");
         setMe(undefined);
-        setConnections([]);
         setHasJoinedRoom(false);
         setMembers([]);
-        internalMembers = [];
+        internalMembers.current.length = 0;
         host = null;
-        connections.length = 0;
+        connections.current.length = 0;
         EventBus.unsubscribeAll(EVENT_BUS_KEY);
     }
 
     function resetState() {
         setKey("");
         setMe(undefined);
-        setConnections([]);
         setHasJoinedRoom(false);
         setMembers(undefined);
-        internalMembers = [];
+        internalMembers.current.length = 0;
         isHost = false;
         setIsHostState(false);
         host = null;
-        connections.length = 0;
+        connections.current.length = 0;
         socket = null;
+        mutedIds.current.length = 0;
         EventBus.unsubscribeAll(EVENT_BUS_KEY);
         EventBus.dispatchEvent(EVENTS.RESET_STATE_EVENT);
     }
@@ -169,7 +169,7 @@ const ContextProvider = ({ children }: any) => {
                     type: NetworkingEvents.UNDO_EVENT,
                     payload: null
                 }
-                broadcastToAll(connections, obj);
+                broadcastToAll(connections.current, obj);
             }, EVENT_BUS_KEY);
 
             EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, (drawEvent: DrawEvent) => {
@@ -177,7 +177,7 @@ const ContextProvider = ({ children }: any) => {
                     type: NetworkingEvents.REDO_EVENT,
                     payload: null
                 }
-                broadcastToAll(connections, obj);
+                broadcastToAll(connections.current, obj);
             }, EVENT_BUS_KEY);
         });
     }
@@ -191,8 +191,7 @@ const ContextProvider = ({ children }: any) => {
 
         peer.once("connect", () => {
             let connection = new Connection(from, name, peer, nanoid(10));
-            connections.push(connection);
-            setConnections([...connections]);
+            connections.current.push(connection);
 
             socket?.emit("memberJoin", { from: connection.from, name: connection.name, id: connection.id })
 
@@ -218,7 +217,7 @@ const ContextProvider = ({ children }: any) => {
             payload: member
         }
 
-        broadcast(connections, connection.from, newUserJoinedEvent);
+        broadcast(connections.current, connection.from, newUserJoinedEvent);
 
         // Sync EventCache with the new member
         let objEventCache: NetworkingEvent = {
@@ -231,29 +230,26 @@ const ContextProvider = ({ children }: any) => {
         // Sync members with the new member
         let objMembers: NetworkingEvent = {
             type: NetworkingEvents.MEMBERS_SYNC,
-            payload: internalMembers
+            payload: internalMembers.current
         }
 
         connection.peer.send(JSON.stringify(objMembers));
 
-        // Setting up connections
-        setConnections(connections);
-
-
         // Setting up peer listeners
         connection.peer.on("data", (data) => {
-            if (mutedIds.indexOf(connection.id) !== -1) {
+            console.log(JSON.stringify(mutedIds.current));
+            if (mutedIds.current.includes(connection.id)) {
                 return;
             }
             let networkingEvent: NetworkingEvent = JSON.parse(data);
             if (networkingEvent.type === NetworkingEvents.DRAW_EVENT || NetworkingEvents.REDO_EVENT || NetworkingEvents.UNDO_EVENT) {
-                broadcast(connections, connection.from, networkingEvent);
+                broadcast(connections.current, connection.from, networkingEvent);
             }
             consumeEvent(networkingEvent);
         })
 
         connection.peer.once("close", () => {
-            connections.splice(connections.indexOf(connection), 1);
+            connections.current.splice(connections.current.indexOf(connection), 1);
             let newUserJoinedEvent: NetworkingEvent = {
                 type: NetworkingEvents.MEMBER_LEFT,
                 payload: member
@@ -262,7 +258,7 @@ const ContextProvider = ({ children }: any) => {
             removeMember(member);
 
             socket?.emit("memberLeave", { from: connection.from, name: connection.name, id: connection.id });
-            broadcastToAll(connections, newUserJoinedEvent);
+            broadcastToAll(connections.current, newUserJoinedEvent);
         });
 
     }
@@ -333,15 +329,28 @@ const ContextProvider = ({ children }: any) => {
             }
             case NetworkingEvents.MEMBERS_SYNC: {
                 if (isHost) break;
-                internalMembers = networkingEvent.payload;
+                internalMembers.current = networkingEvent.payload;
                 setMembers([...networkingEvent.payload]);
-                setMe(internalMembers[internalMembers.length - 1]);
+                let me = internalMembers.current[internalMembers.current.length - 1]
+                setMe(me);
+                meRef.current = me;
                 break;
             }
             case NetworkingEvents.MEMBER_LEFT: {
                 if (isHost) break;
                 let mem = networkingEvent.payload;
                 removeMember(mem);
+                break;
+            }
+            case NetworkingEvents.MUTED_STATE_CHANGE: {
+                if (isHost) break;
+                let isMuted = networkingEvent.payload.isMuted;
+                let member: Member = networkingEvent.payload.member;
+                toggleMute(member, isMuted);
+                console.log(JSON.stringify(networkingEvent) + "\n ----------- \n" + JSON.stringify(meRef.current));
+                if (meRef.current && member.id === meRef.current.id) {
+                    EventBus.dispatchEvent(EVENTS.MUTED_STATE_CHANGE, isMuted);
+                }
                 break;
             }
         }
@@ -366,10 +375,10 @@ const ContextProvider = ({ children }: any) => {
     }
 
     function sendNetworkingEvent(networkingEvent: NetworkingEvent) {
-        if (connections.length === 0 && (host === null || host === undefined)) return;
+        if (connections.current.length === 0 && (host === null || host === undefined)) return;
 
         if (isHost) {
-            broadcastToAll(connections, networkingEvent);
+            broadcastToAll(connections.current, networkingEvent);
         }
         else {
             host?.send(JSON.stringify(networkingEvent));
@@ -379,17 +388,17 @@ const ContextProvider = ({ children }: any) => {
 
     function addMember(member: Member) {
         if (hasMember(member)) return;
-        internalMembers.push(member);
-        setMembers([...internalMembers]);
+        internalMembers.current.push(member);
+        setMembers([...internalMembers.current]);
     }
 
     function removeMember(member: Member) {
-        internalMembers.splice(internalMembers.indexOf(member));
-        setMembers([...internalMembers]);
+        internalMembers.current.splice(internalMembers.current.indexOf(member));
+        setMembers([...internalMembers.current]);
     }
 
     function hasMember(member: Member) {
-        for (let m of internalMembers) {
+        for (let m of internalMembers.current) {
             if (m == member) {
                 return true;
             }
@@ -411,19 +420,37 @@ const ContextProvider = ({ children }: any) => {
         return index;
     }
 
+    function sendMutedState(member: Member, isMuted: boolean) {
+        let event: NetworkingEvent = {
+            type: NetworkingEvents.MUTED_STATE_CHANGE,
+            payload: {
+                isMuted: isMuted,
+                member: member
+            }
+        }
+
+        broadcastToAll(connections.current, event);
+    }
+
     function toggleMute(member: Member, isMuted: boolean) {
         if (!members) return;
         members[members.indexOf(member)].isMuted = isMuted;
-        if (isMuted) {
-            mutedIds.push(members[members.indexOf(member)].id);
+
+        if (isMuted && !mutedIds.current.includes(member.id)) {
+            let id = members[members.indexOf(member)].id;
+            mutedIds.current.push(id);
         }
         else {
-            mutedIds.splice(mutedIds.indexOf(members[members.indexOf(member)].id), 1);
+            mutedIds.current.splice(mutedIds.current.indexOf(members[members.indexOf(member)].id));
+            console.log(JSON.stringify(mutedIds.current));
         }
+
+        sendMutedState(member, isMuted);
+
         setMembers([...members]);
     }
 
-    return (<SocketContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members, toggleMute, isHostState }}>{children}</SocketContext.Provider>)
+    return (<SocketContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members, toggleMute, isHostState, me }}>{children}</SocketContext.Provider>)
 }
 
 export { ContextProvider, SocketContext };

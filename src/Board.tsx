@@ -20,11 +20,22 @@ export default function Board() {
     let currentColor: Color = new Color(0, 0, 0, 255);
     let selectedColor: Color = new Color(0, 0, 0, 255);
     let isFloodFill: boolean = false;
+    const EVENT_BUS_KEY = "BOARD";
 
     useEffect(() => {
         let isControlPressed = false;
         const canvas: HTMLCanvasElement = canvasRef.current!;
         const ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
+        const EVENT_LISTENERS = new Map<string, any>();
+        EVENT_LISTENERS.set("onresize", resize)
+        EVENT_LISTENERS.set("mousedown", startDrawingMouse);
+        EVENT_LISTENERS.set("mouseup", stopDrawingMouse);
+        EVENT_LISTENERS.set("mousemove", onMoveEventMouse);
+        EVENT_LISTENERS.set("mouseout", stopDrawingMouse);
+        EVENT_LISTENERS.set("touchstart", startDrawingTouch);
+        EVENT_LISTENERS.set("touchend", stopDrawingTouch);
+        EVENT_LISTENERS.set("touchmove", onMoveEventTouch);
+
         resize();
 
         window.onresize = resize;
@@ -40,11 +51,11 @@ export default function Board() {
             })
         }
 
-        const startDrawingMouse = (clickEvent: any) => {
+        function startDrawingMouse(clickEvent: any) {
             startDrawing(clickEvent, getMousePositionInCanvas);
         }
 
-        const stopDrawingMouse = (e: any) => {
+        function stopDrawingMouse(e: any) {
             stopDrawing();
         }
 
@@ -258,26 +269,60 @@ export default function Board() {
             EventBus.dispatchEvent(EVENTS.SEND_DRAW_EVENT_REQUEST, drawEvent);
         }
 
-        canvas.addEventListener("onresize", resize)
-        canvas.addEventListener("mousedown", startDrawingMouse);
-        canvas.addEventListener("mouseup", stopDrawingMouse);
-        canvas.addEventListener("mousemove", onMoveEventMouse);
-        canvas.addEventListener("mouseout", stopDrawingMouse);
-        canvas.addEventListener("touchstart", startDrawingTouch);
-        canvas.addEventListener("touchend", stopDrawingTouch);
-        canvas.addEventListener("touchmove", onMoveEventTouch);
+        registerDrawingListeners();
 
-        document.addEventListener('keydown', (e) => {
-            if (e.code === "KeyZ" && isControlPressed) {
+        function registerDrawingListeners() {
+
+            for (let [event, callback] of EVENT_LISTENERS) {
+                canvas.addEventListener(event, callback);
+            }
+
+            /*canvas.addEventListener("onresize", resize)
+            canvas.addEventListener("mousedown", startDrawingMouse);
+            canvas.addEventListener("mouseup", stopDrawingMouse);
+            canvas.addEventListener("mousemove", onMoveEventMouse);
+            canvas.addEventListener("mouseout", stopDrawingMouse);
+            canvas.addEventListener("touchstart", startDrawingTouch);
+            canvas.addEventListener("touchend", stopDrawingTouch);
+            canvas.addEventListener("touchmove", onMoveEventTouch);*/
+
+            document.addEventListener('keydown', (e) => {
+                if (e.code === "KeyZ" && isControlPressed) {
+                    undoLastAction();
+                }
+
+                if (e.code === "KeyY" && isControlPressed) {
+                    doFutureAction();
+                }
+
+                isControlPressed = e.code === "ControlLeft"
+            });
+
+            EventBus.subscribe(EVENTS.FULL_ERASE_REQUEST, () => {
+                let event = new DrawEvent(DrawEventType.FullEraseEvent);
+                EventCache.addEvent(event);
+                sendDrawEvent(event);
+                clearCanvas();
+            }, EVENT_BUS_KEY);
+            EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, () => {
                 undoLastAction();
-            }
-
-            if (e.code === "KeyY" && isControlPressed) {
+            }, EVENT_BUS_KEY);
+            EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, () => {
                 doFutureAction();
+            }, EVENT_BUS_KEY);
+
+            EventBus.subscribe(EVENTS.JOINED_ROOM, () => {
+                clearCanvas();
+            }, EVENT_BUS_KEY);
+        }
+
+        function removeDrawingListeners() {
+            for (let [event, callback] of EVENT_LISTENERS) {
+                canvas.removeEventListener(event, callback);
             }
 
-            isControlPressed = e.code === "ControlLeft"
-        });
+            EventBus.unsubscribeAll(EVENT_BUS_KEY);
+        }
 
 
         function saveCanvasToUserDevice() {
@@ -307,26 +352,11 @@ export default function Board() {
         EventBus.subscribe(EVENTS.DISABLE_ERASER_REQUEST, () => {
             currentColor = selectedColor;
         });
-        EventBus.subscribe(EVENTS.FULL_ERASE_REQUEST, () => {
-            let event = new DrawEvent(DrawEventType.FullEraseEvent);
-            EventCache.addEvent(event);
-            sendDrawEvent(event);
-            clearCanvas();
-        });
-        EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, () => {
-            undoLastAction();
-        });
-        EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, () => {
-            doFutureAction();
-        });
         EventBus.subscribe(EVENTS.FLOOD_FILL_ACTIVATE_REQUEST, () => {
             isFloodFill = true;
         });
         EventBus.subscribe(EVENTS.FLOOD_FILL_DISABLE_REQUEST, () => {
             isFloodFill = false;
-        });
-        EventBus.subscribe(EVENTS.JOINED_ROOM, () => {
-            clearCanvas();
         });
         EventBus.subscribe(EVENTS.EVENT_CACHE_SYNC, (newCache: typeof EventCache) => {
             EventCache.set(newCache);
@@ -344,7 +374,11 @@ export default function Board() {
         });
         EventBus.subscribe(EVENTS.REMOTE_UNDO_REQUEST, () => {
             undoLastAction();
-        })
+        });
+        EventBus.subscribe(EVENTS.MUTED_STATE_CHANGE, (isMuted: boolean) => {
+            if (isMuted) removeDrawingListeners();
+            else registerDrawingListeners();
+        });
     });
 
     return (
