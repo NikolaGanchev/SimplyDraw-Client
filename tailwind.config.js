@@ -4,6 +4,9 @@ module.exports = {
     theme: {
         extend: {
             backgroundColor: ['active'],
+            height: {
+                'fit-content': 'fit-content',
+            }
         },
     },
     variants: {

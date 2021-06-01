@@ -65,5 +65,8 @@
                 "explanation": "(When you mute a member no one sees their actions. They are notified.)"
             }
         }
+    },
+    "board": {
+        "muted": "You have been muted by the host ({{hostName}}). You cannot draw, but you can still see what others are drawing."
     }
 }

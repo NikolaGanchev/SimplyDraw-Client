@@ -52,39 +52,243 @@ const ContextProvider = ({ children }: any) => {
         socket?.emit("createroom");
 
         socket?.once("roomcreated", (res: any) => {
-            setKey(res.id);
-            isHost = true;
-            setIsHostState(true);
-            EventBus.dispatchEvent(EVENTS.ROOM_CREATED, res.id);
-            EventBus.subscribe(EVENTS.SEND_DRAW_EVENT_REQUEST, (drawEvent: DrawEvent) => {
-                sendDrawEvent(drawEvent);
-            }, EVENT_BUS_KEY);
-            let member = new Member(nanoid(10), name, new Avataaar);
-            setMe(member);
-            meRef.current = member;
-            addMember(member);
-
-            EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, (drawEvent: DrawEvent) => {
-                let obj: NetworkingEvent = {
-                    type: NetworkingEvents.UNDO_EVENT,
-                    payload: null
-                }
-                broadcastToAll(connections.current, obj);
-            }, EVENT_BUS_KEY);
-
-            EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, (drawEvent: DrawEvent) => {
-                let obj: NetworkingEvent = {
-                    type: NetworkingEvents.REDO_EVENT,
-                    payload: null
-                }
-                broadcastToAll(connections.current, obj);
-            }, EVENT_BUS_KEY);
+            handleRoomCreation(res.id);
         });
+    }
 
+    function handleRoomCreation(code: string) {
+        let member = new Member(nanoid(10), name, new Avataaar());
+
+        // Set state
+        isHost = true;
+        setIsHostState(true);
+        setKey(code);
+        setMe(member);
+        addMember(member);
+        meRef.current = member;
+
+        // Event listeners
         socket?.once("garbageCollected", () => {
             disbandRoom();
         });
+
+        EventBus.dispatchEvent(EVENTS.ROOM_CREATED, code);
+
+        EventBus.subscribe(EVENTS.SEND_DRAW_EVENT_REQUEST, (drawEvent: DrawEvent) => {
+            sendDrawEvent(drawEvent);
+        }, EVENT_BUS_KEY);
+
+        EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, (drawEvent: DrawEvent) => {
+            let obj: NetworkingEvent = {
+                type: NetworkingEvents.UNDO_EVENT,
+                payload: null
+            }
+            broadcastToAll(connections.current, obj);
+        }, EVENT_BUS_KEY);
+
+        EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, (drawEvent: DrawEvent) => {
+            let obj: NetworkingEvent = {
+                type: NetworkingEvents.REDO_EVENT,
+                payload: null
+            }
+            broadcastToAll(connections.current, obj);
+        }, EVENT_BUS_KEY);
     }
+
+    function joinRoom(code: string, name: string) {
+        const peer = new Peer({ initiator: true, trickle: false });
+
+        setName(name);
+
+        peer.on('signal', (data) => {
+            socket?.emit('joinroom', { userToCall: code, signalData: data, from: socket.id, name });
+        });
+
+        socket?.once('joinAccepted', (signal) => {
+            isHost = false;
+            setIsHostState(false);
+            peer.signal(signal);
+            peer.once("connect", () => {
+                setUpConnectionAsClient(peer);
+            });
+
+            setKey(code);
+
+            peer.on("error", (err) => {
+                console.error(err);
+            });
+        });
+
+        socket?.once("hostMigration", () => {
+            if (isHost) return;
+            leaveRoom();
+
+            joinRoom(code, name);
+        });
+
+        socket?.once("becomeHost", () => {
+            leaveRoom();
+            EventBus.dispatchEvent(EVENTS.BECAME_HOST_EVENT);
+            handleRoomCreation(code);
+        });
+    }
+
+    function answerJoinRequest(from: string, signal: any, name: string, peer: Peer.Instance) {
+        peer.on('signal', (data) => {
+            socket?.emit('answerJoinRequest', { signal: data, to: from });
+        });
+
+        peer.signal(signal);
+
+        peer.once("connect", () => {
+            // Add connection object to array
+            let connection = new Connection(from, name, peer, nanoid(10));
+            connections.current.push(connection);
+
+            // Notify other members
+            socket?.emit("memberJoin", { from: connection.from, name: connection.name, id: connection.id })
+
+            setUpConnectionAsHost(connection);
+        });
+
+
+
+        peer.on('error', (err) => {
+            console.error(err);
+        });
+    }
+
+
+    function setUpConnectionAsHost(connection: Connection) {
+
+        // Creating member
+        let member = new Member(connection.id, connection.name, new Avataaar());
+        addMember(member);
+
+        notifyOfNewMember(member, connection)
+
+        sendEventCache(connection);
+
+        sendMembers(connection);
+
+        // Setting up peer listeners
+        connection.peer.on("data", (data) => {
+            onDataHost(data, connection);
+        })
+
+        connection.peer.once("close", () => {
+            onMemberLeave(connection, member);
+        });
+    }
+
+    function setUpConnectionAsClient(peer: Peer.Instance) {
+        // Setting up context 
+        host = peer;
+        setHasJoinedRoom(true);
+        EventBus.dispatchEvent(EVENTS.JOINED_ROOM);
+
+        // Setting up peer listeners
+        peer.on("data", (data) => {
+            onDataClient(data);
+        });
+
+        // Host migration should happen automatically
+        peer.once("close", () => {
+            peer.removeAllListeners("data");
+        });
+
+        // EventBus listeners
+
+        EventBus.subscribe(EVENTS.SEND_DRAW_EVENT_REQUEST, (drawEvent: DrawEvent) => {
+            sendDrawEvent(drawEvent);
+        }, EVENT_BUS_KEY);
+
+        EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, onUndoRequest, EVENT_BUS_KEY);
+
+        EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, onRedoRequest, EVENT_BUS_KEY);
+    }
+
+    // Notify members of the new user
+    function notifyOfNewMember(member: Member, connection: Connection) {
+        let newUserJoinedEvent: NetworkingEvent = {
+            type: NetworkingEvents.NEW_USER_JOINED,
+            payload: member
+        }
+
+        broadcast(connections.current, connection.from, newUserJoinedEvent);
+    }
+
+    // Sync EventCache with the new member
+    function sendEventCache(connection: Connection) {
+        let objEventCache: NetworkingEvent = {
+            type: NetworkingEvents.EVENT_CACHE_SYNC,
+            payload: EventCache
+        }
+
+        connection.peer.send(JSON.stringify(objEventCache));
+    }
+
+    // Sync members with the new member
+    function sendMembers(connection: Connection) {
+        let objMembers: NetworkingEvent = {
+            type: NetworkingEvents.MEMBERS_SYNC,
+            payload: internalMembers.current
+        }
+
+        connection.peer.send(JSON.stringify(objMembers));
+    }
+
+    function onDataHost(data: any, connection: Connection) {
+        // Check if member is muted
+        if (mutedIds.current.includes(connection.id)) {
+            return;
+        }
+
+        let networkingEvent: NetworkingEvent = JSON.parse(data);
+
+        // If event should be sent to other members, do so
+        if (networkingEvent.type === NetworkingEvents.DRAW_EVENT || NetworkingEvents.REDO_EVENT || NetworkingEvents.UNDO_EVENT) {
+            broadcast(connections.current, connection.from, networkingEvent);
+        }
+
+        // Consume the event 
+        consumeEvent(networkingEvent);
+    }
+
+    function onMemberLeave(connection: Connection, member: Member) {
+        connections.current.splice(connections.current.indexOf(connection), 1);
+        let userLeftEvent: NetworkingEvent = {
+            type: NetworkingEvents.MEMBER_LEFT,
+            payload: member
+        }
+
+        removeMember(member);
+
+        socket?.emit("memberLeave", { from: connection.from, name: connection.name, id: connection.id });
+        broadcastToAll(connections.current, userLeftEvent);
+    }
+
+    function onDataClient(data: any) {
+        let networkingEvent: NetworkingEvent = JSON.parse(data);
+        consumeEvent(networkingEvent);
+    }
+
+    function onUndoRequest() {
+        let obj: NetworkingEvent = {
+            type: NetworkingEvents.UNDO_EVENT,
+            payload: null
+        }
+        sendNetworkingEvent(obj);
+    }
+
+    function onRedoRequest() {
+        let obj: NetworkingEvent = {
+            type: NetworkingEvents.REDO_EVENT,
+            payload: null
+        }
+        sendNetworkingEvent(obj);
+    }
+
 
     function disbandRoom() {
         if (isHost) {
@@ -129,193 +333,6 @@ const ContextProvider = ({ children }: any) => {
         mutedIds.current.length = 0;
         EventBus.unsubscribeAll(EVENT_BUS_KEY);
         EventBus.dispatchEvent(EVENTS.RESET_STATE_EVENT);
-    }
-
-    function joinRoom(code: string, name: string) {
-        const peer = new Peer({ initiator: true, trickle: false });
-        setName(name);
-        peer.on('signal', (data) => {
-            socket?.emit('joinroom', { userToCall: code, signalData: data, from: socket.id, name });
-        });
-
-        socket?.once('joinAccepted', (signal) => {
-            isHost = false;
-            setIsHostState(false);
-            peer.signal(signal);
-            peer.once("connect", () => {
-                setUpConnectionAsClient(peer);
-            });
-
-            setKey(code);
-
-            peer.on("error", (err) => {
-                console.error(err);
-            });
-        });
-
-        socket?.once("hostMigration", () => {
-            if (isHost) return;
-            leaveRoom();
-
-            joinRoom(code, name);
-        });
-
-        socket?.once("becomeHost", () => {
-            leaveRoom();
-            EventBus.dispatchEvent(EVENTS.BECAME_HOST_EVENT);
-            setKey(code);
-            isHost = true;
-            setIsHostState(true);
-            EventBus.dispatchEvent(EVENTS.ROOM_CREATED, code);
-            EventBus.subscribe(EVENTS.SEND_DRAW_EVENT_REQUEST, (drawEvent: DrawEvent) => {
-                sendDrawEvent(drawEvent);
-            }, EVENT_BUS_KEY);
-
-            let member = new Member(nanoid(10), name, new Avataaar);
-            setMe(member);
-            meRef.current = member;
-            addMember(member);
-
-            EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, (drawEvent: DrawEvent) => {
-                let obj: NetworkingEvent = {
-                    type: NetworkingEvents.UNDO_EVENT,
-                    payload: null
-                }
-                broadcastToAll(connections.current, obj);
-            }, EVENT_BUS_KEY);
-
-            EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, (drawEvent: DrawEvent) => {
-                let obj: NetworkingEvent = {
-                    type: NetworkingEvents.REDO_EVENT,
-                    payload: null
-                }
-                broadcastToAll(connections.current, obj);
-            }, EVENT_BUS_KEY);
-
-            socket?.once("garbageCollected", () => {
-                disbandRoom();
-            });
-        });
-    }
-
-    function answerJoinRequest(from: string, signal: any, name: string, peer: Peer.Instance) {
-        peer.on('signal', (data) => {
-            socket?.emit('answerJoinRequest', { signal: data, to: from });
-        });
-
-        peer.signal(signal);
-
-        peer.once("connect", () => {
-            let connection = new Connection(from, name, peer, nanoid(10));
-            connections.current.push(connection);
-
-            socket?.emit("memberJoin", { from: connection.from, name: connection.name, id: connection.id })
-
-            setUpConnectionAsHost(connection);
-        });
-
-
-
-        peer.on('error', (err) => {
-            console.error(err);
-        });
-    }
-
-    function setUpConnectionAsHost(connection: Connection) {
-
-        // Creating member
-        let member = new Member(connection.id, connection.name, new Avataaar());
-        addMember(member);
-
-        // Notify members of the new user
-        let newUserJoinedEvent: NetworkingEvent = {
-            type: NetworkingEvents.NEW_USER_JOINED,
-            payload: member
-        }
-
-        broadcast(connections.current, connection.from, newUserJoinedEvent);
-
-        // Sync EventCache with the new member
-        let objEventCache: NetworkingEvent = {
-            type: NetworkingEvents.EVENT_CACHE_SYNC,
-            payload: EventCache
-        }
-
-        connection.peer.send(JSON.stringify(objEventCache));
-
-        // Sync members with the new member
-        let objMembers: NetworkingEvent = {
-            type: NetworkingEvents.MEMBERS_SYNC,
-            payload: internalMembers.current
-        }
-
-        connection.peer.send(JSON.stringify(objMembers));
-
-        // Setting up peer listeners
-        connection.peer.on("data", (data) => {
-            if (mutedIds.current.includes(connection.id)) {
-                return;
-            }
-            let networkingEvent: NetworkingEvent = JSON.parse(data);
-            if (networkingEvent.type === NetworkingEvents.DRAW_EVENT || NetworkingEvents.REDO_EVENT || NetworkingEvents.UNDO_EVENT) {
-                broadcast(connections.current, connection.from, networkingEvent);
-            }
-            consumeEvent(networkingEvent);
-        })
-
-        connection.peer.once("close", () => {
-            connections.current.splice(connections.current.indexOf(connection), 1);
-            let userLeftEvent: NetworkingEvent = {
-                type: NetworkingEvents.MEMBER_LEFT,
-                payload: member
-            }
-
-            removeMember(member);
-
-            socket?.emit("memberLeave", { from: connection.from, name: connection.name, id: connection.id });
-            broadcastToAll(connections.current, userLeftEvent);
-        });
-
-    }
-
-    function setUpConnectionAsClient(peer: Peer.Instance) {
-        // Setting up peer listeners
-        peer.on("data", (data) => {
-            let networkingEvent: NetworkingEvent = JSON.parse(data);
-            consumeEvent(networkingEvent);
-        });
-
-        peer.once("close", () => {
-            peer.removeAllListeners("data");
-
-            // Host migration should happen automatically
-        });
-
-        // Setting up context and EventBus listeners
-        host = peer;
-
-        setHasJoinedRoom(true);
-
-        EventBus.dispatchEvent(EVENTS.JOINED_ROOM);
-
-        EventBus.subscribe(EVENTS.SEND_DRAW_EVENT_REQUEST, (drawEvent: DrawEvent) => {
-            sendDrawEvent(drawEvent);
-        }, EVENT_BUS_KEY);
-        EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, (drawEvent: DrawEvent) => {
-            let obj: NetworkingEvent = {
-                type: NetworkingEvents.UNDO_EVENT,
-                payload: null
-            }
-            sendNetworkingEvent(obj);
-        }, EVENT_BUS_KEY);
-
-        EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, (drawEvent: DrawEvent) => {
-            let obj: NetworkingEvent = {
-                type: NetworkingEvents.REDO_EVENT,
-                payload: null
-            }
-            sendNetworkingEvent(obj);
-        }, EVENT_BUS_KEY);
     }
 
     function consumeEvent(networkingEvent: NetworkingEvent) {
@@ -398,7 +415,6 @@ const ContextProvider = ({ children }: any) => {
         else {
             host?.send(JSON.stringify(networkingEvent));
         }
-
     }
 
     function addMember(member: Member) {

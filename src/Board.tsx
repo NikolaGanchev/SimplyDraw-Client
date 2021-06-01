@@ -11,6 +11,8 @@ import EventCache from './Events/EventCache';
 import ColorABGR from './utils/ColorABGR';
 import FloodFillEvent from './Events/FloodFillEvent';
 import Members from './Members';
+import { useTranslation } from 'react-i18next';
+import { SocketContext } from './SocketContext';
 
 export default function Board() {
     const canvasRef = useRef(null);
@@ -21,6 +23,9 @@ export default function Board() {
     let selectedColor: Color = new Color(0, 0, 0, 255);
     let isFloodFill: boolean = false;
     const EVENT_BUS_KEY = "BOARD";
+    const [isMuted, setIsMuted] = useState(false);
+    const [t] = useTranslation("common");
+    const { members }: any = useContext(SocketContext);
 
     useEffect(() => {
         let isControlPressed = false;
@@ -277,15 +282,6 @@ export default function Board() {
                 canvas.addEventListener(event, callback);
             }
 
-            /*canvas.addEventListener("onresize", resize)
-            canvas.addEventListener("mousedown", startDrawingMouse);
-            canvas.addEventListener("mouseup", stopDrawingMouse);
-            canvas.addEventListener("mousemove", onMoveEventMouse);
-            canvas.addEventListener("mouseout", stopDrawingMouse);
-            canvas.addEventListener("touchstart", startDrawingTouch);
-            canvas.addEventListener("touchend", stopDrawingTouch);
-            canvas.addEventListener("touchmove", onMoveEventTouch);*/
-
             document.addEventListener('keydown', (e) => {
                 if (e.code === "KeyZ" && isControlPressed) {
                     undoLastAction();
@@ -376,14 +372,28 @@ export default function Board() {
             undoLastAction();
         });
         EventBus.subscribe(EVENTS.MUTED_STATE_CHANGE, (isMuted: boolean) => {
-            if (isMuted) removeDrawingListeners();
-            else registerDrawingListeners();
+            setIsMuted(isMuted);
+
+            if (isMuted) {
+                removeDrawingListeners();
+            }
+            else {
+                registerDrawingListeners();
+            }
         });
     });
 
     return (
         <div>
             <Members></Members>
+            {(isMuted) ?
+                (<div className="absolute bg-black bg-opacity-20 z-10 w-full h-full flex">
+                    <span className="align-top justify-start ml-3 mt-1 bg-white rounded-md p-1 w-auto h-fit-content text-center shadow-md">
+                        {t("board.muted", { hostName: members[0].name })}
+                    </span>
+                </div>)
+                :
+                (null)}
             <canvas ref={canvasRef} className=""></canvas>
         </div>
     );
