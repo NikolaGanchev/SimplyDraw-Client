@@ -61,6 +61,7 @@ const ContextProvider = ({ children }: any) => {
             }, EVENT_BUS_KEY);
             let member = new Member(nanoid(10), name, new Avataaar);
             setMe(member);
+            meRef.current = member;
             addMember(member);
 
             EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, (drawEvent: DrawEvent) => {
@@ -92,6 +93,10 @@ const ContextProvider = ({ children }: any) => {
     }
 
     function leaveRoom() {
+        if (meRef.current && meRef.current.isMuted) {
+            toggleMute(meRef.current, false);
+            EventBus.dispatchEvent(EVENTS.MUTED_STATE_CHANGE, false);
+        }
         isHost = false;
         setIsHostState(false);
         setKey("");
@@ -100,11 +105,16 @@ const ContextProvider = ({ children }: any) => {
         setMembers([]);
         internalMembers.current.length = 0;
         host = null;
+        meRef.current = undefined;
         connections.current.length = 0;
         EventBus.unsubscribeAll(EVENT_BUS_KEY);
     }
 
     function resetState() {
+        if (meRef.current && meRef.current.isMuted) {
+            toggleMute(meRef.current, false);
+            EventBus.dispatchEvent(EVENTS.MUTED_STATE_CHANGE, false);
+        }
         setKey("");
         setMe(undefined);
         setHasJoinedRoom(false);
@@ -115,6 +125,7 @@ const ContextProvider = ({ children }: any) => {
         host = null;
         connections.current.length = 0;
         socket = null;
+        meRef.current = undefined;
         mutedIds.current.length = 0;
         EventBus.unsubscribeAll(EVENT_BUS_KEY);
         EventBus.dispatchEvent(EVENTS.RESET_STATE_EVENT);
@@ -162,6 +173,7 @@ const ContextProvider = ({ children }: any) => {
 
             let member = new Member(nanoid(10), name, new Avataaar);
             setMe(member);
+            meRef.current = member;
             addMember(member);
 
             EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, (drawEvent: DrawEvent) => {
@@ -179,6 +191,10 @@ const ContextProvider = ({ children }: any) => {
                 }
                 broadcastToAll(connections.current, obj);
             }, EVENT_BUS_KEY);
+
+            socket?.once("garbageCollected", () => {
+                disbandRoom();
+            });
         });
     }
 
@@ -237,7 +253,6 @@ const ContextProvider = ({ children }: any) => {
 
         // Setting up peer listeners
         connection.peer.on("data", (data) => {
-            console.log(JSON.stringify(mutedIds.current));
             if (mutedIds.current.includes(connection.id)) {
                 return;
             }
@@ -250,7 +265,7 @@ const ContextProvider = ({ children }: any) => {
 
         connection.peer.once("close", () => {
             connections.current.splice(connections.current.indexOf(connection), 1);
-            let newUserJoinedEvent: NetworkingEvent = {
+            let userLeftEvent: NetworkingEvent = {
                 type: NetworkingEvents.MEMBER_LEFT,
                 payload: member
             }
@@ -258,7 +273,7 @@ const ContextProvider = ({ children }: any) => {
             removeMember(member);
 
             socket?.emit("memberLeave", { from: connection.from, name: connection.name, id: connection.id });
-            broadcastToAll(connections.current, newUserJoinedEvent);
+            broadcastToAll(connections.current, userLeftEvent);
         });
 
     }
@@ -272,6 +287,7 @@ const ContextProvider = ({ children }: any) => {
 
         peer.once("close", () => {
             peer.removeAllListeners("data");
+
             // Host migration should happen automatically
         });
 
@@ -347,7 +363,6 @@ const ContextProvider = ({ children }: any) => {
                 let isMuted = networkingEvent.payload.isMuted;
                 let member: Member = networkingEvent.payload.member;
                 toggleMute(member, isMuted);
-                console.log(JSON.stringify(networkingEvent) + "\n ----------- \n" + JSON.stringify(meRef.current));
                 if (meRef.current && member.id === meRef.current.id) {
                     EventBus.dispatchEvent(EVENTS.MUTED_STATE_CHANGE, isMuted);
                 }
@@ -393,7 +408,10 @@ const ContextProvider = ({ children }: any) => {
     }
 
     function removeMember(member: Member) {
-        internalMembers.current.splice(internalMembers.current.indexOf(member));
+        if (mutedIds.current && mutedIds.current.includes(member.id)) {
+            mutedIds.current.splice(mutedIds.current.indexOf(member.id), 1);
+        }
+        internalMembers.current.splice(internalMembers.current.indexOf(member), 1);
         setMembers([...internalMembers.current]);
     }
 
@@ -407,11 +425,11 @@ const ContextProvider = ({ children }: any) => {
         return false;
     }
 
-    function getMemberIndexByIdFromState(id: string): number {
-        if (!members) return -1;
+    function getMemberIndexById(memberArray: Member[], id: string): number {
+        if (!memberArray) return -1;
         let index = -1;
-        for (let i = 0; i < members.length; i++) {
-            if (members[i].id == id) {
+        for (let i = 0; i < memberArray.length; i++) {
+            if (memberArray[i].id == id) {
                 index = i;
                 break;
             }
@@ -433,24 +451,29 @@ const ContextProvider = ({ children }: any) => {
     }
 
     function toggleMute(member: Member, isMuted: boolean) {
-        if (!members) return;
-        members[members.indexOf(member)].isMuted = isMuted;
+        if (!internalMembers.current) return;
+        let index = getMemberIndexById(internalMembers.current, member.id);
+        internalMembers.current[index].isMuted = isMuted;
+
+
+        if (meRef.current && meRef.current.id === member.id) {
+            meRef.current.isMuted = isMuted;
+        }
 
         if (isMuted && !mutedIds.current.includes(member.id)) {
-            let id = members[members.indexOf(member)].id;
+            let id = member.id;
             mutedIds.current.push(id);
         }
         else {
-            mutedIds.current.splice(mutedIds.current.indexOf(members[members.indexOf(member)].id));
-            console.log(JSON.stringify(mutedIds.current));
+            mutedIds.current.splice(mutedIds.current.indexOf(internalMembers.current[index].id));
         }
 
         sendMutedState(member, isMuted);
 
-        setMembers([...members]);
+        setMembers([...internalMembers.current]);
     }
 
-    return (<SocketContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members, toggleMute, isHostState, me }}>{children}</SocketContext.Provider>)
+    return (<SocketContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members, toggleMute, isHostState, me, meRef }}>{children}</SocketContext.Provider>)
 }
 
 export { ContextProvider, SocketContext };
