@@ -57,7 +57,9 @@
                     "success": "You have joined a room!",
                     "name": "Change name",
                     "button": "Join"
-                }
+                },
+                "disband": "Disband room",
+                "leave": "Leave room"
             }
         },
         "members": {
@@ -70,12 +72,12 @@
         }
     },
     "board": {
-        "muted": "You have been muted by the host ({{hostName}}). You cannot draw, but you can still see what others are drawing."
+        "muted": "You have been muted by the host. You cannot draw, but you can still see what others are drawing."
     },
     "error": {
         "header": "Error!",
         "room": {
-            "garbageCollected": "Your room had been disbanded for staying too long",
+            "garbageCollected": "Your room has been disbanded",
             "noSuchCode": "The room you are trying to join does not exist. Check your code",
             "tooManyInRoom": "There are too many people in the room you are trying to join"
         },

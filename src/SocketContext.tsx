@@ -29,18 +29,18 @@ const ContextProvider = ({ children }: any) => {
     const isHost = useRef<boolean>(false);
     let host = useRef<Peer.Instance | null>(null);
     const connections = useRef<Connection[]>([]);
-    let socket: Socket | null;
+    let socket = useRef<Socket | null>(null);
     const EVENT_BUS_KEY = "EVENT_BUS_KEY";
 
 
     function startServerConnection(token: any) {
-        socket = io("http://localhost:5000", { query: { "captchaToken": token } });
+        socket.current = io("http://localhost:5000", { query: { "captchaToken": token } });
 
-        socket.once("success", (res: any) => {
+        socket.current.once("success", (res: any) => {
             EventBus.dispatchEvent(EVENTS.SUCCESSFUL_SERVER_CONNECTION);
         });
 
-        socket.on('joinroom', ({ from, signal, name }: any) => {
+        socket.current.on('joinroom', ({ from, signal, name }: any) => {
             // Check if websockets did't send the request more than one time
             if (connectionsContain(connections.current, from)) return;
 
@@ -51,9 +51,9 @@ const ContextProvider = ({ children }: any) => {
     }
 
     function createRoom() {
-        socket?.emit("createroom");
+        socket.current?.emit("createroom");
 
-        socket?.once("roomcreated", (res: any) => {
+        socket.current?.once("roomcreated", (res: any) => {
             handleRoomCreation(res.id);
         });
     }
@@ -70,9 +70,9 @@ const ContextProvider = ({ children }: any) => {
         meRef.current = member;
 
         // Event listeners
-        socket?.once("garbageCollected", () => {
+        socket.current?.once("garbageCollected", () => {
             EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("error.room.garbageCollected")));
-            disbandRoom();
+            onDisbandRoom();
         });
 
         EventBus.dispatchEvent(EVENTS.ROOM_CREATED, code);
@@ -104,10 +104,10 @@ const ContextProvider = ({ children }: any) => {
         setName(name);
 
         peer.on('signal', (data) => {
-            socket?.emit('joinroom', { userToCall: code, signalData: data, from: socket.id, name });
+            socket.current?.emit('joinroom', { userToCall: code, signalData: data, from: socket.current.id, name });
         });
 
-        socket?.once('joinAccepted', (signal) => {
+        socket.current?.once('joinAccepted', (signal) => {
             isHost.current = false;
             setIsHostState(false);
             peer.signal(signal);
@@ -122,33 +122,39 @@ const ContextProvider = ({ children }: any) => {
             });
         });
 
-        socket?.once("noSuchCode", () => {
+        socket.current?.once("garbageCollected", () => {
+            EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("error.room.garbageCollected")));
+            leaveRoom();
+        });
+
+        socket.current?.once("noSuchCode", () => {
             EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("error.room.noSuchCode")));
             leaveRoom();
         });
 
-        socket?.once("tooManyInRoom", () => {
+        socket.current?.once("tooManyInRoom", () => {
             EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("error.room.tooManyInRoom")));
             leaveRoom();
         });
 
-        socket?.once("hostMigration", () => {
+        socket.current?.once("hostMigration", () => {
             if (isHost.current) return;
             leaveRoom();
 
             joinRoom(code, name);
         });
 
-        socket?.once("becomeHost", () => {
+        socket.current?.once("becomeHost", () => {
+            let currentName = meRef.current?.name;
             leaveRoom();
             EventBus.dispatchEvent(EVENTS.BECAME_HOST_EVENT);
-            handleRoomCreation(code, meRef.current?.name);
+            handleRoomCreation(code, currentName);
         });
     }
 
     function answerJoinRequest(from: string, signal: any, name: string, peer: Peer.Instance) {
         peer.on('signal', (data) => {
-            socket?.emit('answerJoinRequest', { signal: data, to: from });
+            socket.current?.emit('answerJoinRequest', { signal: data, to: from });
         });
 
         peer.signal(signal);
@@ -159,7 +165,7 @@ const ContextProvider = ({ children }: any) => {
             connections.current.push(connection);
 
             // Notify other members
-            socket?.emit("memberJoin", { from: connection.from, name: connection.name, id: connection.id })
+            socket.current?.emit("memberJoin", { from: connection.from, name: connection.name, id: connection.id })
 
             setUpConnectionAsHost(connection);
         });
@@ -277,7 +283,7 @@ const ContextProvider = ({ children }: any) => {
 
         removeMember(member);
 
-        socket?.emit("memberLeave", { from: connection.from, name: connection.name, id: connection.id });
+        socket.current?.emit("memberLeave", { from: connection.from, name: connection.name, id: connection.id });
         broadcastToAll(connections.current, userLeftEvent);
     }
 
@@ -339,10 +345,15 @@ const ContextProvider = ({ children }: any) => {
         sendNetworkingEvent(networkingEvent);
     }
 
-    function disbandRoom() {
+    function onDisbandRoom() {
         if (isHost.current) {
             resetState();
         }
+    }
+
+    function disbandRoom() {
+        socket.current?.emit("disbandRoom");
+        onDisbandRoom();
     }
 
     function leaveRoom() {
@@ -355,7 +366,7 @@ const ContextProvider = ({ children }: any) => {
         setKey("");
         setMe(undefined);
         setHasJoinedRoom(false);
-        setMembers([]);
+        setMembers(undefined);
         internalMembers.current.length = 0;
         host.current = null;
         meRef.current = undefined;
@@ -377,7 +388,7 @@ const ContextProvider = ({ children }: any) => {
         setIsHostState(false);
         host.current = null;
         connections.current.length = 0;
-        socket = null;
+        socket.current = null;
         meRef.current = undefined;
         mutedIds.current.length = 0;
         EventBus.unsubscribeAll(EVENT_BUS_KEY);
@@ -552,7 +563,7 @@ const ContextProvider = ({ children }: any) => {
         setMembers([...internalMembers.current]);
     }
 
-    return (<SocketContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members, toggleMute, isHostState, me, meRef, changeName }}>{children}</SocketContext.Provider>)
+    return (<SocketContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members, toggleMute, isHostState, me, changeName, disbandRoom, leaveRoom }}>{children}</SocketContext.Provider>)
 }
 
 export { ContextProvider, SocketContext };

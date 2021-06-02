@@ -18,7 +18,7 @@ export default function GroupConnectComponent(props: any) {
     const [isCreateRoom, setIsCreateRoom] = useState(false);
     const [isChoose, setIsChoose] = useState(false);
     const [isJoinRoom, setIsJoinRoom] = useState(false);
-    const { key, startServerConnection, createRoom, joinRoom, hasJoinedRoom, changeName, me }: any = useContext(SocketContext);
+    const { key, startServerConnection, createRoom, joinRoom, hasJoinedRoom, changeName, me, disbandRoom, leaveRoom }: any = useContext(SocketContext);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const createNameInputRef = useRef<HTMLInputElement>(null);
     const [name, setName] = useState("");
@@ -109,11 +109,13 @@ export default function GroupConnectComponent(props: any) {
                     {isCreateRoom ?
                         (
                             <div>
-                                <input type="text" maxLength={14} className="p-3 border-2 border-black rounded-md" ref={createNameInputRef} placeholder="Name" defaultValue={me.name}></input>
-                                <button className="bg-green-400 rounded-md p-3 ml-3" onClick={() => { if (createNameInputRef.current) { changeName(createNameInputRef.current.value) } }}>{t("group.setup.rooms.create.name")}</button>
-                                <br></br>
                                 <div>{t("group.setup.rooms.create.instructions")} </div>
                                 <span className="text-xl"><b>{key}</b></span>
+                                <br></br>
+                                <input type="text" maxLength={14} className="p-3 border-2 border-black rounded-md" ref={createNameInputRef} placeholder="Name" defaultValue={me.name}></input>
+                                <button className="bg-green-400 rounded-md p-3 ml-3 mt-3" onClick={() => { if (createNameInputRef.current) { changeName(createNameInputRef.current.value) } }}>{t("group.setup.rooms.create.name")}</button>
+                                <br></br>
+                                <button className="bg-red-400 rounded-md p-3 mt-3" onClick={disbandRoom}>{t("group.setup.rooms.disband")}</button>
                             </div>
                         ) : (null)}
                     {isJoinRoom ?
@@ -122,7 +124,10 @@ export default function GroupConnectComponent(props: any) {
                                 <button className="bg-green-400 rounded-md p-3 ml-3" onClick={() => { if (nameInputRef.current) { changeName(nameInputRef.current.value) } }} disabled={!hasJoinedRoom}>{t("group.setup.rooms.join.name")}</button>
                                 <br></br>
                                 <input value={joinRoomCode} type="text" maxLength={6} onChange={handleCodeChange} className="p-3 border-2 border-black rounded-md" ref={inputRef} placeholder="6 letter code" disabled={hasJoinedRoom}></input>
-                                <button className="bg-green-400 rounded-md p-3 ml-3" onClick={submitCode} disabled={hasJoinedRoom}>{t("group.setup.rooms.join.button")}</button></div>
+                                <button className="bg-green-400 rounded-md p-3 ml-3 mt-3" onClick={submitCode} disabled={hasJoinedRoom}>{t("group.setup.rooms.join.button")}</button>
+                                <br></br>
+                                <button className="bg-red-400 rounded-md p-3 mt-3" onClick={leaveRoom} disabled={!hasJoinedRoom}>{t("group.setup.rooms.leave")}</button>
+                            </div>
                         ) : (null)}
                     {hasJoinedRoom ?
                         (

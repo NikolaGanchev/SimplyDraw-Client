@@ -14,6 +14,11 @@ import Members from './Members';
 import { useTranslation } from 'react-i18next';
 import { SocketContext } from './SocketContext';
 
+// Do not use the context here
+// For some unknown reason, the inclusion of context in the board causes events to be sent multiple times
+// meaning that a single line can reach about 7 events, all the same
+// that also means that using a flood fill overflows the RAM that browsers allocate, causing the page to crash
+// Until an explanation of this behavior comes up, just do not "useContext"
 export default function Board() {
     const canvasRef = useRef(null);
     let isDrawing = false;
@@ -25,7 +30,6 @@ export default function Board() {
     const EVENT_BUS_KEY = "BOARD";
     const [isMuted, setIsMuted] = useState(false);
     const [t] = useTranslation("common");
-    const { members }: any = useContext(SocketContext);
 
     useEffect(() => {
         let isControlPressed = false;
@@ -406,7 +410,7 @@ export default function Board() {
             {(isMuted) ?
                 (<div className="absolute bg-black bg-opacity-20 z-10 w-full h-full flex">
                     <span className="align-top justify-start ml-3 mt-1 bg-white rounded-md p-1 w-auto h-fit-content text-center shadow-md">
-                        {t("board.muted", { hostName: members[0].name })}
+                        {t("board.muted")}
                     </span>
                 </div>)
                 :
