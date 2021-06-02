@@ -277,7 +277,6 @@ export default function Board() {
         registerDrawingListeners();
 
         function registerDrawingListeners() {
-
             for (let [event, callback] of EVENT_LISTENERS) {
                 canvas.addEventListener(event, callback);
             }
@@ -320,6 +319,22 @@ export default function Board() {
             EventBus.unsubscribeAll(EVENT_BUS_KEY);
         }
 
+        function registerErrors() {
+
+            EventBus.subscribe(EVENTS.FULL_ERASE_REQUEST, () => {
+                EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("error.muted.draw")));
+            }, EVENT_BUS_KEY);
+            EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, () => {
+                EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("error.muted.draw")));
+            }, EVENT_BUS_KEY);
+            EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, () => {
+                EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("error.muted.draw")));
+            }, EVENT_BUS_KEY);
+
+            EventBus.subscribe(EVENTS.JOINED_ROOM, () => {
+                EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("error.muted.draw")));
+            }, EVENT_BUS_KEY);
+        }
 
         function saveCanvasToUserDevice() {
             canvas.toBlob(function (blob: Blob | null) {
@@ -360,7 +375,7 @@ export default function Board() {
             EventCache.pastEvents.forEach((e: DrawEvent) => {
                 drawEvent(e);
             });
-        })
+        });
         EventBus.subscribe(EVENTS.DRAW_EVENT, (e: DrawEvent) => {
             EventCache.addEvent(e);
             drawEvent(e);
@@ -376,8 +391,10 @@ export default function Board() {
 
             if (isMuted) {
                 removeDrawingListeners();
+                registerErrors();
             }
             else {
+                removeDrawingListeners();
                 registerDrawingListeners();
             }
         });

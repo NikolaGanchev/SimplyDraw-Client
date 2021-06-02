@@ -6,5 +6,6 @@ export enum NetworkingEvents {
     REDO_EVENT = "redoEvent",
     MEMBERS_SYNC = "membersSync",
     MEMBER_LEFT = "memberLeft",
-    MUTED_STATE_CHANGE = "mutedStateChange"
+    MUTED_STATE_CHANGE = "mutedStateChange",
+    MEMBER_NAME_CHANGE = "memberNameChange"
 }

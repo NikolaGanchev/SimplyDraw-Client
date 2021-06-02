@@ -11,6 +11,7 @@ import DrawEvent from './Events/DrawEvent';
 import Member from './Networking/Member';
 import Avataaar from './utils/Avataaar';
 import { nanoid } from 'nanoid'
+import { useTranslation } from 'react-i18next';
 
 const SocketContext = createContext({});
 
@@ -21,11 +22,12 @@ const ContextProvider = ({ children }: any) => {
     const [hasJoinedRoom, setHasJoinedRoom] = useState(false);
     const [members, setMembers] = useState<Member[]>();
     const [isHostState, setIsHostState] = useState(false);
+    const [t] = useTranslation("common");
     let internalMembers = useRef<Member[]>([]);
     const mutedIds = useRef<string[]>([]);
     const meRef = useRef<Member>();
-    let isHost = false;
-    let host: Peer.Instance | null;
+    const isHost = useRef<boolean>(false);
+    let host = useRef<Peer.Instance | null>(null);
     const connections = useRef<Connection[]>([]);
     let socket: Socket | null;
     const EVENT_BUS_KEY = "EVENT_BUS_KEY";
@@ -56,11 +58,11 @@ const ContextProvider = ({ children }: any) => {
         });
     }
 
-    function handleRoomCreation(code: string) {
-        let member = new Member(nanoid(10), name, new Avataaar());
+    function handleRoomCreation(code: string, selfName: string = name) {
+        let member = new Member(nanoid(10), selfName, new Avataaar());
 
         // Set state
-        isHost = true;
+        isHost.current = true;
         setIsHostState(true);
         setKey(code);
         setMe(member);
@@ -69,6 +71,7 @@ const ContextProvider = ({ children }: any) => {
 
         // Event listeners
         socket?.once("garbageCollected", () => {
+            EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("error.room.garbageCollected")));
             disbandRoom();
         });
 
@@ -105,7 +108,7 @@ const ContextProvider = ({ children }: any) => {
         });
 
         socket?.once('joinAccepted', (signal) => {
-            isHost = false;
+            isHost.current = false;
             setIsHostState(false);
             peer.signal(signal);
             peer.once("connect", () => {
@@ -119,8 +122,18 @@ const ContextProvider = ({ children }: any) => {
             });
         });
 
+        socket?.once("noSuchCode", () => {
+            EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("error.room.noSuchCode")));
+            leaveRoom();
+        });
+
+        socket?.once("tooManyInRoom", () => {
+            EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("error.room.tooManyInRoom")));
+            leaveRoom();
+        });
+
         socket?.once("hostMigration", () => {
-            if (isHost) return;
+            if (isHost.current) return;
             leaveRoom();
 
             joinRoom(code, name);
@@ -129,7 +142,7 @@ const ContextProvider = ({ children }: any) => {
         socket?.once("becomeHost", () => {
             leaveRoom();
             EventBus.dispatchEvent(EVENTS.BECAME_HOST_EVENT);
-            handleRoomCreation(code);
+            handleRoomCreation(code, meRef.current?.name);
         });
     }
 
@@ -183,7 +196,7 @@ const ContextProvider = ({ children }: any) => {
 
     function setUpConnectionAsClient(peer: Peer.Instance) {
         // Setting up context 
-        host = peer;
+        host.current = peer;
         setHasJoinedRoom(true);
         EventBus.dispatchEvent(EVENTS.JOINED_ROOM);
 
@@ -252,7 +265,7 @@ const ContextProvider = ({ children }: any) => {
         }
 
         // Consume the event 
-        consumeEvent(networkingEvent);
+        consumeEvent(networkingEvent, connection);
     }
 
     function onMemberLeave(connection: Connection, member: Member) {
@@ -289,9 +302,45 @@ const ContextProvider = ({ children }: any) => {
         sendNetworkingEvent(obj);
     }
 
+    function changeName(newName: string) {
+        if (!meRef.current) return;
+        if (meRef.current.isMuted) {
+            EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("error.muted.name")));
+            return;
+        }
+
+        meRef.current.name = newName;
+
+        changeMemberName(meRef.current, newName);
+
+        sendNameChangeEvent(meRef.current, newName);
+    }
+
+    function changeMemberName(member: Member, newName: string) {
+        let index = getMemberIndexById(internalMembers.current, member.id);
+
+        if (internalMembers.current) {
+            internalMembers.current[index].name = newName;
+            setMembers([...internalMembers.current]);
+            let member = Object.assign({}, meRef.current);
+            setMe(member);
+        }
+    }
+
+    function sendNameChangeEvent(member: Member, newName: string) {
+        let networkingEvent: NetworkingEvent = {
+            type: NetworkingEvents.MEMBER_NAME_CHANGE,
+            payload: {
+                member: member,
+                newName: newName
+            }
+        };
+
+        sendNetworkingEvent(networkingEvent);
+    }
 
     function disbandRoom() {
-        if (isHost) {
+        if (isHost.current) {
             resetState();
         }
     }
@@ -301,14 +350,14 @@ const ContextProvider = ({ children }: any) => {
             toggleMute(meRef.current, false);
             EventBus.dispatchEvent(EVENTS.MUTED_STATE_CHANGE, false);
         }
-        isHost = false;
+        isHost.current = false;
         setIsHostState(false);
         setKey("");
         setMe(undefined);
         setHasJoinedRoom(false);
         setMembers([]);
         internalMembers.current.length = 0;
-        host = null;
+        host.current = null;
         meRef.current = undefined;
         connections.current.length = 0;
         EventBus.unsubscribeAll(EVENT_BUS_KEY);
@@ -324,9 +373,9 @@ const ContextProvider = ({ children }: any) => {
         setHasJoinedRoom(false);
         setMembers(undefined);
         internalMembers.current.length = 0;
-        isHost = false;
+        isHost.current = false;
         setIsHostState(false);
-        host = null;
+        host.current = null;
         connections.current.length = 0;
         socket = null;
         meRef.current = undefined;
@@ -335,16 +384,16 @@ const ContextProvider = ({ children }: any) => {
         EventBus.dispatchEvent(EVENTS.RESET_STATE_EVENT);
     }
 
-    function consumeEvent(networkingEvent: NetworkingEvent) {
+    function consumeEvent(networkingEvent: NetworkingEvent, connection: Connection | null = null) {
         switch (networkingEvent.type) {
             case NetworkingEvents.NEW_USER_JOINED: {
-                if (isHost) break;
+                if (isHost.current) break;
                 EventBus.dispatchEvent(EVENTS.NEW_USER_JOINED, networkingEvent.payload);
                 addMember(networkingEvent.payload);
                 break;
             }
             case NetworkingEvents.EVENT_CACHE_SYNC: {
-                if (isHost) break;
+                if (isHost.current) break;
                 EventBus.dispatchEvent(EVENTS.EVENT_CACHE_SYNC, networkingEvent.payload);
                 break;
             }
@@ -361,7 +410,7 @@ const ContextProvider = ({ children }: any) => {
                 break;
             }
             case NetworkingEvents.MEMBERS_SYNC: {
-                if (isHost) break;
+                if (isHost.current) break;
                 internalMembers.current = networkingEvent.payload;
                 setMembers([...networkingEvent.payload]);
                 let me = internalMembers.current[internalMembers.current.length - 1]
@@ -370,13 +419,13 @@ const ContextProvider = ({ children }: any) => {
                 break;
             }
             case NetworkingEvents.MEMBER_LEFT: {
-                if (isHost) break;
+                if (isHost.current) break;
                 let mem = networkingEvent.payload;
                 removeMember(mem);
                 break;
             }
             case NetworkingEvents.MUTED_STATE_CHANGE: {
-                if (isHost) break;
+                if (isHost.current) break;
                 let isMuted = networkingEvent.payload.isMuted;
                 let member: Member = networkingEvent.payload.member;
                 toggleMute(member, isMuted);
@@ -384,6 +433,20 @@ const ContextProvider = ({ children }: any) => {
                     EventBus.dispatchEvent(EVENTS.MUTED_STATE_CHANGE, isMuted);
                 }
                 break;
+            }
+            case NetworkingEvents.MEMBER_NAME_CHANGE: {
+                if (!internalMembers.current) return;
+                if (isHost.current && connection) {
+                    let index = getMemberIndexById(internalMembers.current, connection.id);
+                    let member = internalMembers.current[index];
+                    if (member.id == connection.id) {
+                        changeMemberName(member, networkingEvent.payload.newName);
+                        sendNetworkingEvent(networkingEvent);
+                    }
+                }
+                else if (!isHost.current && !connection) {
+                    changeMemberName(networkingEvent.payload.member, networkingEvent.payload.newName);
+                }
             }
         }
     }
@@ -407,13 +470,13 @@ const ContextProvider = ({ children }: any) => {
     }
 
     function sendNetworkingEvent(networkingEvent: NetworkingEvent) {
-        if (connections.current.length === 0 && (host === null || host === undefined)) return;
+        if (connections.current.length === 0 && (host.current === null || host.current === undefined)) return;
 
-        if (isHost) {
+        if (isHost.current) {
             broadcastToAll(connections.current, networkingEvent);
         }
         else {
-            host?.send(JSON.stringify(networkingEvent));
+            host?.current?.send(JSON.stringify(networkingEvent));
         }
     }
 
@@ -489,7 +552,7 @@ const ContextProvider = ({ children }: any) => {
         setMembers([...internalMembers.current]);
     }
 
-    return (<SocketContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members, toggleMute, isHostState, me, meRef }}>{children}</SocketContext.Provider>)
+    return (<SocketContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members, toggleMute, isHostState, me, meRef, changeName }}>{children}</SocketContext.Provider>)
 }
 
 export { ContextProvider, SocketContext };

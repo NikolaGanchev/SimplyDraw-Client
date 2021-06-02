@@ -6,6 +6,9 @@ import Board from './Board'
 import { useTranslation } from 'react-i18next';
 import { i18n } from 'i18next';
 import { Route, BrowserRouter as Router, Switch, useParams } from "react-router-dom";
+import ResponsiveError from './ResponsiveError';
+import { useState } from 'react';
+import EventBus, { EVENTS } from './Events/EventBus';
 
 
 
@@ -27,6 +30,14 @@ function TranslationHelper() {
 }
 
 function App() {
+  const [showError, setShowError] = useState(false);
+  const [error, setError] = useState("");
+
+  EventBus.subscribe(EVENTS.ERROR, (error: Error) => {
+    setError(error.message);
+    setShowError(true);
+  });
+
   return (
     <div>
       <Router>
@@ -34,6 +45,9 @@ function App() {
           <Route path="/:lang" children={<TranslationHelper />} />
         </Switch>
       </Router>
+      {showError ?
+        (<ResponsiveError error={error} onResponse={setShowError}></ResponsiveError>) :
+        (null)}
       <Navbar></Navbar>
       <Board ></Board>
     </div>
