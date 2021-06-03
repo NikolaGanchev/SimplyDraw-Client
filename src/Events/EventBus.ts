@@ -47,7 +47,6 @@ class EventBus {
     }
 
     unsubscribe(eventName: string, key: string) {
-        console.log(this.listeners);
         if (this.listeners.has(eventName)) {
             this.listeners.get(eventName)?.forEach((e: Event) => {
                 if (e.key === key) {
@@ -55,8 +54,6 @@ class EventBus {
                 }
             })
         }
-
-        console.log(this.listeners);
     }
 
     unsubscribeAll(keyToCheck: string) {

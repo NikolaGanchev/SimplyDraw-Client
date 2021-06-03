@@ -14,11 +14,6 @@ import Members from './Members';
 import { useTranslation } from 'react-i18next';
 import { SocketContext } from './SocketContext';
 
-// Do not use the context here
-// For some unknown reason, the inclusion of context in the board causes events to be sent multiple times
-// meaning that a single line can reach about 7 events, all the same
-// that also means that using a flood fill overflows the RAM that browsers allocate, causing the page to crash
-// Until an explanation of this behavior comes up, just do not "useContext"
 export default function Board() {
     const canvasRef = useRef(null);
     let isDrawing = false;
@@ -30,6 +25,7 @@ export default function Board() {
     const EVENT_BUS_KEY = "BOARD";
     const [isMuted, setIsMuted] = useState(false);
     const [t] = useTranslation("common");
+    const { sendDrawEvent }: any = useContext(SocketContext);
 
     useEffect(() => {
         let isControlPressed = false;
@@ -218,7 +214,6 @@ export default function Board() {
 
         // Source: https://stackoverflow.com/questions/53077955/how-do-i-do-flood-fill-on-the-html-canvas-in-javascript
         function floodFill(startingPixel: Position, color: Color) {
-
             function getPixel(pixelData: any, x: number, y: number) {
                 if (x < 0 || y < 0 || x >= pixelData.width || y >= pixelData.height) {
                     return -1;
@@ -268,14 +263,6 @@ export default function Board() {
                 // put the data back
                 ctx.putImageData(imageData, 0, 0);
             }
-        }
-
-        // I would use the react context verison of his function directly
-        // However, the inclusion of useContext() in this file causes some very strange bugs
-        // Like canvas resetting and invoking floodFill() too much
-        // For this reason, im using the EventBus to communicate
-        function sendDrawEvent(drawEvent: DrawEvent) {
-            EventBus.dispatchEvent(EVENTS.SEND_DRAW_EVENT_REQUEST, drawEvent);
         }
 
         registerDrawingListeners();
@@ -350,6 +337,7 @@ export default function Board() {
             });
         }
 
+
         EventBus.subscribe(EVENTS.CANVAS_DOWNLOAD_REQUEST, saveCanvasToUserDevice);
         EventBus.subscribe(EVENTS.DRAWING_COLOR_CHANGE_REQUEST, (newColor: Color) => {
             selectedColor = newColor;
@@ -392,7 +380,6 @@ export default function Board() {
         });
         EventBus.subscribe(EVENTS.MUTED_STATE_CHANGE, (isMuted: boolean) => {
             setIsMuted(isMuted);
-
             if (isMuted) {
                 removeDrawingListeners();
                 registerErrors();
@@ -402,7 +389,13 @@ export default function Board() {
                 registerDrawingListeners();
             }
         });
-    });
+        // After a lot of debugging and reading docs, some things were learned
+        // Like the fact that useEffect reruns of every rerender
+        // Causing a plethora of strange issues, with listener running an extreme amounts of time
+        // it turns out, all you need to fix it is [], to basically say that it should only rerun when the values in that list update
+        // which is never
+        // Well, that was a nice learning experience
+    }, []);
 
     return (
         <div>

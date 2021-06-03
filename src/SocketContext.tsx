@@ -77,10 +77,6 @@ const ContextProvider = ({ children }: any) => {
 
         EventBus.dispatchEvent(EVENTS.ROOM_CREATED, code);
 
-        EventBus.subscribe(EVENTS.SEND_DRAW_EVENT_REQUEST, (drawEvent: DrawEvent) => {
-            sendDrawEvent(drawEvent);
-        }, EVENT_BUS_KEY);
-
         EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, (drawEvent: DrawEvent) => {
             let obj: NetworkingEvent = {
                 type: NetworkingEvents.UNDO_EVENT,
@@ -170,8 +166,6 @@ const ContextProvider = ({ children }: any) => {
             setUpConnectionAsHost(connection);
         });
 
-
-
         peer.on('error', (err) => {
             console.error(err);
         });
@@ -217,10 +211,6 @@ const ContextProvider = ({ children }: any) => {
         });
 
         // EventBus listeners
-
-        EventBus.subscribe(EVENTS.SEND_DRAW_EVENT_REQUEST, (drawEvent: DrawEvent) => {
-            sendDrawEvent(drawEvent);
-        }, EVENT_BUS_KEY);
 
         EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, onUndoRequest, EVENT_BUS_KEY);
 
@@ -356,6 +346,12 @@ const ContextProvider = ({ children }: any) => {
         onDisbandRoom();
     }
 
+    function handleLeaveRoom() {
+        leaveRoom();
+        socket.current = null;
+        EventBus.dispatchEvent(EVENTS.RESET_STATE_EVENT);
+    }
+
     function leaveRoom() {
         if (meRef.current && meRef.current.isMuted) {
             toggleMute(meRef.current, false);
@@ -368,6 +364,8 @@ const ContextProvider = ({ children }: any) => {
         setHasJoinedRoom(false);
         setMembers(undefined);
         internalMembers.current.length = 0;
+        host.current?.removeAllListeners("data");
+        host.current?.destroy();
         host.current = null;
         meRef.current = undefined;
         connections.current.length = 0;
@@ -379,6 +377,10 @@ const ContextProvider = ({ children }: any) => {
             toggleMute(meRef.current, false);
             EventBus.dispatchEvent(EVENTS.MUTED_STATE_CHANGE, false);
         }
+        connections.current.forEach((con: Connection) => {
+            con.peer.removeAllListeners("data");
+            con.peer.destroy();
+        })
         setKey("");
         setMe(undefined);
         setHasJoinedRoom(false);
@@ -563,7 +565,7 @@ const ContextProvider = ({ children }: any) => {
         setMembers([...internalMembers.current]);
     }
 
-    return (<SocketContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members, toggleMute, isHostState, me, changeName, disbandRoom, leaveRoom }}>{children}</SocketContext.Provider>)
+    return (<SocketContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members, toggleMute, isHostState, me, changeName, disbandRoom, leaveRoom, handleLeaveRoom }}>{children}</SocketContext.Provider>)
 }
 
 export { ContextProvider, SocketContext };

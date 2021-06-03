@@ -18,7 +18,7 @@ export default function GroupConnectComponent(props: any) {
     const [isCreateRoom, setIsCreateRoom] = useState(false);
     const [isChoose, setIsChoose] = useState(false);
     const [isJoinRoom, setIsJoinRoom] = useState(false);
-    const { key, startServerConnection, createRoom, joinRoom, hasJoinedRoom, changeName, me, disbandRoom, leaveRoom }: any = useContext(SocketContext);
+    const { key, startServerConnection, createRoom, joinRoom, hasJoinedRoom, changeName, me, disbandRoom, handleLeaveRoom }: any = useContext(SocketContext);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const createNameInputRef = useRef<HTMLInputElement>(null);
     const [name, setName] = useState("");
@@ -26,8 +26,6 @@ export default function GroupConnectComponent(props: any) {
     function onClick() {
         setShowModal(true);
     }
-
-
 
     function onVerifyCaptcha(token: any) {
         startServerConnection(token);
@@ -126,7 +124,7 @@ export default function GroupConnectComponent(props: any) {
                                 <input value={joinRoomCode} type="text" maxLength={6} onChange={handleCodeChange} className="p-3 border-2 border-black rounded-md" ref={inputRef} placeholder="6 letter code" disabled={hasJoinedRoom}></input>
                                 <button className="bg-green-400 rounded-md p-3 ml-3 mt-3" onClick={submitCode} disabled={hasJoinedRoom}>{t("group.setup.rooms.join.button")}</button>
                                 <br></br>
-                                <button className="bg-red-400 rounded-md p-3 mt-3" onClick={leaveRoom} disabled={!hasJoinedRoom}>{t("group.setup.rooms.leave")}</button>
+                                <button className="bg-red-400 rounded-md p-3 mt-3" onClick={handleLeaveRoom} disabled={!hasJoinedRoom}>{t("group.setup.rooms.leave")}</button>
                             </div>
                         ) : (null)}
                     {hasJoinedRoom ?
