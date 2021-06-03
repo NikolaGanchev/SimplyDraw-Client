@@ -10,7 +10,7 @@ export default function MemberComponent(props: any) {
     const [showDetails, setShowDetails] = useState(false);
     const [t] = useTranslation("common");
 
-    const { isHostState, toggleMute, me }: any = useContext(SocketContext);
+    const { isHostState, toggleMute, me, kick }: any = useContext(SocketContext);
 
     function onToggle(e: React.ChangeEvent<HTMLInputElement>) {
         if (e.target) {
@@ -38,6 +38,8 @@ export default function MemberComponent(props: any) {
                                 </label>
                                 <br></br>
                                 <span className="text-sm">{t("group.members.mute.explanation")}</span>
+                                <br></br>
+                                <button className="bg-red-400 rounded-md p-3 mt-3" onClick={() => { kick(member) }}>{t("group.members.kick.title")}</button>
                             </div>
                         )
                         :

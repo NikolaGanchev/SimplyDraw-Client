@@ -265,8 +265,9 @@ const ContextProvider = ({ children }: any) => {
     }
 
     function onMemberLeave(connection: Connection, member: Member) {
+
         connections.current.splice(connections.current.indexOf(connection), 1);
-        let userLeftEvent: NetworkingEvent = {
+        let memberLeftEvent: NetworkingEvent = {
             type: NetworkingEvents.MEMBER_LEFT,
             payload: member
         }
@@ -274,7 +275,7 @@ const ContextProvider = ({ children }: any) => {
         removeMember(member);
 
         socket.current?.emit("memberLeave", { from: connection.from, name: connection.name, id: connection.id });
-        broadcastToAll(connections.current, userLeftEvent);
+        broadcastToAll(connections.current, memberLeftEvent);
     }
 
     function onDataClient(data: any) {
@@ -350,6 +351,20 @@ const ContextProvider = ({ children }: any) => {
         leaveRoom();
         socket.current = null;
         EventBus.dispatchEvent(EVENTS.RESET_STATE_EVENT);
+    }
+
+    function kick(member: Member) {
+        if (isHost.current && connections.current && internalMembers.current) {
+            let connection = connections.current[getConnectionIndexById(connections.current, member.id)];
+            let networkingEvent = {
+                type: NetworkingEvents.KICK_EVENT,
+                payload: null
+            }
+
+            connections.current[getConnectionIndexById(connections.current, member.id)].peer.send(JSON.stringify(networkingEvent));
+            connections.current[getConnectionIndexById(connections.current, member.id)].peer.removeAllListeners("data");
+            connections.current[getConnectionIndexById(connections.current, member.id)].peer.destroy();
+        }
     }
 
     function leaveRoom() {
@@ -460,6 +475,12 @@ const ContextProvider = ({ children }: any) => {
                 else if (!isHost.current && !connection) {
                     changeMemberName(networkingEvent.payload.member, networkingEvent.payload.newName);
                 }
+                break;
+            }
+            case NetworkingEvents.KICK_EVENT: {
+                if (isHost.current) return;
+                handleLeaveRoom();
+                EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("group.members.kick.error")));
             }
         }
     }
@@ -542,6 +563,19 @@ const ContextProvider = ({ children }: any) => {
         broadcastToAll(connections.current, event);
     }
 
+    function getConnectionIndexById(connectionArray: Connection[], id: string): number {
+        if (!connectionArray) return -1;
+        let index = -1;
+        for (let i = 0; i < connectionArray.length; i++) {
+            if (connectionArray[i].id == id) {
+                index = i;
+                break;
+            }
+        }
+
+        return index;
+    }
+
     function toggleMute(member: Member, isMuted: boolean) {
         if (!internalMembers.current) return;
         let index = getMemberIndexById(internalMembers.current, member.id);
@@ -565,7 +599,7 @@ const ContextProvider = ({ children }: any) => {
         setMembers([...internalMembers.current]);
     }
 
-    return (<SocketContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members, toggleMute, isHostState, me, changeName, disbandRoom, leaveRoom, handleLeaveRoom }}>{children}</SocketContext.Provider>)
+    return (<SocketContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members, toggleMute, isHostState, me, changeName, disbandRoom, leaveRoom, handleLeaveRoom, kick }}>{children}</SocketContext.Provider>)
 }
 
 export { ContextProvider, SocketContext };
