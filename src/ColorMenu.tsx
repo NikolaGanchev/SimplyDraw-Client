@@ -8,6 +8,7 @@ import Color from './utils/Color';
 import { useWindowDimensions } from './Hooks';
 import MobileModal from './MobileModal';
 import { useTranslation } from 'react-i18next';
+import { nanoid } from 'nanoid';
 
 export default function ColorMenu(props: any) {
     const [shouldShowMenu, setShouldShowMenu] = useState(false);
@@ -64,7 +65,7 @@ export default function ColorMenu(props: any) {
         <div className="relative top-0 self-center inline-flex space-x-1">
 
             {defaultColors.map((color, i) => {
-                return (<ColorCircle color={color} key={i} onSelect={onColorSelectFromDefaults}></ColorCircle>)
+                return (<ColorCircle color={color} key={nanoid(3)} onSelect={onColorSelectFromDefaults}></ColorCircle>)
             })}
 
             <div className="relative inline-flex flex-col self-center hover:bg-gray-300 transition-colors place-items-center align-center w-12 h-12 justify-center rounded-md" onMouseEnter={onHover} onMouseLeave={onHoverLeave}>

@@ -7,6 +7,7 @@ import Color from './utils/Color';
 import { useWindowDimensions } from './Hooks';
 import MobileModal from './MobileModal';
 import { useTranslation } from 'react-i18next';
+import { nanoid } from 'nanoid';
 
 export default function NumberInput(props: any) {
     const [List, setList] = useState(props.list);
@@ -57,7 +58,7 @@ export default function NumberInput(props: any) {
                     (<div className="relative flex self-end z-10 justify-end slim-scrollbar hover:bg-white">
                         <div className="rounded-md absolute mt-1 z-50 bg-white shadow-lg w-24 h-24 overflow-scroll overflow-x-hidden flex flex-col place-items-center">
                             {List.map((entry: any, i: any) => {
-                                return (<button key={i} className="h-6 w-full hover:bg-gray-300 place-content-center flex transition-colors" onClick={() => { onItemClick(entry) }}>{entry}</button>);
+                                return (<button key={nanoid(3)} className="h-6 w-full hover:bg-gray-300 place-content-center flex transition-colors" onClick={() => { onItemClick(entry) }}>{entry}</button>);
                             })}
                         </div>
                     </div>)
@@ -70,7 +71,7 @@ export default function NumberInput(props: any) {
                     (<MobileModal header={t("navbar.line.mobile.headers.width")} onResponse={() => { onButtonClick() }}><div className="relative flex self-end z-10 justify-end slim-scrollbar hover:bg-white">
                         <div className="rounded-md mt-1 z-50 bg-white shadow-lg w-24 h-24 overflow-scroll overflow-x-hidden flex flex-col place-items-center">
                             {List.map((entry: any, i: any) => {
-                                return (<button key={i} className="h-8 w-full hover:bg-gray-300 place-content-center flex transition-colors" onClick={() => { onItemClick(entry) }}>{entry}</button>);
+                                return (<button key={nanoid(3)} className="h-8 w-full hover:bg-gray-300 place-content-center flex transition-colors" onClick={() => { onItemClick(entry) }}>{entry}</button>);
                             })}
                         </div>
                     </div></MobileModal>)
