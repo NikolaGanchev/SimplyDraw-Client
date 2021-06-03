@@ -6,9 +6,12 @@ import { EVENTS } from './Events/EventBus';
 import { useState, useEffect } from 'react';
 import ConfirmAlert from "./ConfirmAlert";
 import { useTranslation } from "react-i18next";
+import Color from "./utils/Color";
 
 export function EraseInput() {
-    const [background, setBackground] = useState("#ffffff");
+    const activeColor = new Color(209, 213, 219, 1);
+    const inactiveColor = new Color(255, 255, 255);
+    const [background, setBackground] = useState(inactiveColor.rgbaToString());
     const [eraserIsActive, setEraserIsActive] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [t] = useTranslation('common');
@@ -16,22 +19,22 @@ export function EraseInput() {
     function onEraserClick() {
         if (eraserIsActive) {
             EventBus.dispatchEvent(EVENTS.DISABLE_ERASER_REQUEST);
-            setBackground("#ffffff");
+            setBackground(inactiveColor.rgbaToString());
         }
         else {
             EventBus.dispatchEvent(EVENTS.ACTIVATE_ERASER_REQUEST);
-            setBackground("rgba(209, 213, 219, 1)");
+            setBackground(activeColor.rgbaToString());
         }
         setEraserIsActive(!eraserIsActive);
     }
 
     function onHover() {
-        setBackground("rgba(209, 213, 219, 1)");
+        setBackground(activeColor.rgbaToString());
     }
 
     function onStopHover() {
         if (!eraserIsActive) {
-            setBackground("#ffffff");
+            setBackground(inactiveColor.rgbaToString());
         }
     }
 
@@ -49,7 +52,7 @@ export function EraseInput() {
 
     EventBus.subscribe(EVENTS.DRAWING_COLOR_CHANGE_REQUEST, () => {
         setEraserIsActive(false);
-        setBackground("#ffffff");
+        setBackground(inactiveColor.rgbaToString());
     });
 
     return (

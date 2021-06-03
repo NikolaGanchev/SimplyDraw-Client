@@ -1,18 +1,22 @@
 import { useState } from 'react';
 import EventBus, { EVENTS } from './Events/EventBus';
 import FillIcon from './resources/format_color_fill_black_24dp.svg';
+import Color from './utils/Color';
 
 export default function FloodFillButton() {
-    const [background, setBackground] = useState("#ffffff");
+    const activeColor = new Color(209, 213, 219, 1);
+    const inactiveColor = new Color(255, 255, 255);
+
+    const [background, setBackground] = useState(inactiveColor.rgbaToString());
     const [isFloodActive, setIsFloodActive] = useState(false);
 
     function onHover() {
-        setBackground("rgba(209, 213, 219, 1)");
+        setBackground(activeColor.rgbaToString());
     }
 
     function onStopHover() {
         if (!isFloodActive) {
-            setBackground("#ffffff");
+            setBackground(inactiveColor.rgbaToString());
         }
     }
 
