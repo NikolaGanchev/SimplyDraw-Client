@@ -16,13 +16,13 @@ import { useTranslation } from 'react-i18next';
 const SocketContext = createContext({});
 
 const ContextProvider = ({ children }: any) => {
+    const [t] = useTranslation("common");
     const [key, setKey] = useState("");
     const [me, setMe] = useState<Member>();
-    const [name, setName] = useState("Default");
+    const [name, setName] = useState<string>(t("group.members.host"));
     const [hasJoinedRoom, setHasJoinedRoom] = useState(false);
     const [members, setMembers] = useState<Member[]>();
     const [isHostState, setIsHostState] = useState(false);
-    const [t] = useTranslation("common");
     let internalMembers = useRef<Member[]>([]);
     const mutedIds = useRef<string[]>([]);
     const meRef = useRef<Member>();

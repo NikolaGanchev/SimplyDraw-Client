@@ -41,7 +41,7 @@
         "setup": {
             "headers": {
                 "captcha": "Prove you are not a robot",
-                "room": "Let's start"
+                "room": "Let's start!"
             },
             "rooms": {
                 "create": {
@@ -58,11 +58,12 @@
                     "name": "Change name",
                     "button": "Join"
                 },
-                "disband": "Disband room",
-                "leave": "Leave room"
+                "disband": "Disband the room",
+                "leave": "Leave the room"
             }
         },
         "members": {
+            "host": "host",
             "isMuted": " is muted",
             "isNotMuted": " is not muted",
             "mute": {
