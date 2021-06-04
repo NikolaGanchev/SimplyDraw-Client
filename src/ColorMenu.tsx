@@ -9,6 +9,7 @@ import { useWindowDimensions } from './Hooks';
 import MobileModal from './MobileModal';
 import { useTranslation } from 'react-i18next';
 import { nanoid } from 'nanoid';
+import { Fade } from 'react-awesome-reveal';
 
 export default function ColorMenu(props: any) {
     const [shouldShowMenu, setShouldShowMenu] = useState(false);
@@ -73,8 +74,8 @@ export default function ColorMenu(props: any) {
                     <button className="rounded-full w-10 h-10 flex items-center justify-center ml-auto" onClick={onMenuClick} style={{ backgroundColor: color.rgbaToString() }}><img src={PickColorIcon} className="w-6 h-6 select-none"></img></button>
                 </div >
                 {(shouldShowMenu && width > 1024) ? (
-                    <div className="relative flex self-end justify-end z-10" ref={ColorPickerRef}>
-                        <SketchPicker className="absolute mt-1 z-50" color={color} onChange={onChangeColor}></SketchPicker>
+                    <div className="relative flex self-end justify-end z-30" ref={ColorPickerRef}>
+                        <Fade duration={500} className="absolute mt-1 z-50"><SketchPicker color={color} onChange={onChangeColor}></SketchPicker></Fade>
                     </div>) : (null)}
 
                 {(isClicked && width <= 1024) ? (

@@ -9,6 +9,7 @@ import { useWindowDimensions } from "./Hooks";
 import MobileModal from "./MobileModal";
 import { useTranslation } from "react-i18next";
 import { nanoid } from "nanoid";
+import { Fade } from "react-awesome-reveal";
 
 export default function LineStyleInput(props: any) {
     const [t] = useTranslation("common");
@@ -57,7 +58,7 @@ export default function LineStyleInput(props: any) {
     }
 
     return (
-        <div className="relative top-0 self-center inline-flex space-x-1 rounded-md border-2 hover:bg-gray-300 h-full" style={{ borderColor: borderColor }} onClick={onButtonClick}>
+        <div className="relative top-0 self-center inline-flex space-x-1 rounded-md border-2 hover:bg-gray-300 transition-colors h-full" style={{ borderColor: borderColor }} onClick={onButtonClick}>
             <div className="flex self-center justify-center w-24 h-full rounded-md place-content-center place-items-center cursor-pointer select-none flex-row p-0 mt-0.5 " style={{ borderColor: borderColor }} >
 
                 <div className="h-full flex place-items-center justify-center w-3/4">
@@ -71,7 +72,7 @@ export default function LineStyleInput(props: any) {
                         (<div className="relative flex self-end z-10 justify-end slim-scrollbar hover:bg-white">
                             <div className="rounded-md absolute mt-1 z-50 bg-white shadow-lg w-24 h-24 overflow-scroll overflow-x-hidden flex flex-col place-items-center">
                                 {List.map((entry: any, i: any) => {
-                                    return (<button key={nanoid(3)} className="h-8 w-full hover:bg-gray-300 place-content-center flex transition-colors" onClick={() => { onItemClick(entry) }}>{entry}</button>);
+                                    return (<Fade duration={500} className="h-8 w-full"><button key={nanoid(3)} className="h-8 w-full hover:bg-gray-300 place-content-center flex transition-colors" onClick={() => { onItemClick(entry) }}>{entry}</button></Fade>);
                                 })}
                             </div>
                         </div>)

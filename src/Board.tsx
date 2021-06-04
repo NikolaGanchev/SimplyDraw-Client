@@ -13,6 +13,7 @@ import FloodFillEvent from './Events/FloodFillEvent';
 import Members from './Members';
 import { useTranslation } from 'react-i18next';
 import { SocketContext } from './SocketContext';
+import { Fade } from 'react-awesome-reveal';
 
 export default function Board() {
     const canvasRef = useRef(null);
@@ -401,11 +402,11 @@ export default function Board() {
         <div>
             <Members></Members>
             {(isMuted) ?
-                (<div className="absolute bg-black bg-opacity-20 z-10 w-full h-full flex">
+                (<Fade duration={500} className="absolute z-10 w-full h-full flex"><div className="absolute bg-black bg-opacity-20 z-10 w-full h-full flex">
                     <span className="align-top justify-start ml-3 mt-1 bg-white rounded-md p-1 w-auto h-fit-content text-center shadow-md">
                         {t("board.muted")}
                     </span>
-                </div>)
+                </div></Fade>)
                 :
                 (null)}
             <canvas ref={canvasRef} className=""></canvas>
