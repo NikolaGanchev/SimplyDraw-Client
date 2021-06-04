@@ -89,6 +89,7 @@
         "muted": {
             "draw": "You can't draw while muted.",
             "name": "You can't change your name while muted"
-        }
+        },
+        "downloading": "We encountered an error while downloading. Please try again."
     }
 }

@@ -266,6 +266,18 @@ export default function Board() {
             }
         }
 
+        function onKeyEvent(e: KeyboardEvent) {
+            if (e.code === "KeyZ" && isControlPressed) {
+                undoLastAction();
+            }
+
+            if (e.code === "KeyY" && isControlPressed) {
+                doFutureAction();
+            }
+
+            isControlPressed = e.code === "ControlLeft"
+        }
+
         registerDrawingListeners();
 
         function registerDrawingListeners() {
@@ -273,17 +285,7 @@ export default function Board() {
                 canvas.addEventListener(event, callback);
             }
 
-            document.addEventListener('keydown', (e) => {
-                if (e.code === "KeyZ" && isControlPressed) {
-                    undoLastAction();
-                }
-
-                if (e.code === "KeyY" && isControlPressed) {
-                    doFutureAction();
-                }
-
-                isControlPressed = e.code === "ControlLeft"
-            });
+            document.addEventListener('keydown', onKeyEvent);
 
             EventBus.subscribe(EVENTS.FULL_ERASE_REQUEST, () => {
                 let event = new DrawEvent(DrawEventType.FullEraseEvent);
@@ -308,6 +310,8 @@ export default function Board() {
                 canvas.removeEventListener(event, callback);
             }
 
+            document.removeEventListener('keydown', onKeyEvent);
+
             EventBus.unsubscribeAll(EVENT_BUS_KEY);
         }
 
@@ -331,7 +335,7 @@ export default function Board() {
         function saveCanvasToUserDevice() {
             canvas.toBlob(function (blob: Blob | null) {
                 if (blob === null) {
-                    window.alert("We encountered an error while downloading. Please try again.");
+                    EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("error.downloading")));
                     return;
                 }
                 saveAs(blob, "simplydraw.png");
