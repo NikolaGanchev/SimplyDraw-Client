@@ -8,6 +8,9 @@ module.exports = {
                 'fit-content': 'fit-content',
             }
         },
+        screens: {
+            'small': '1080px'
+        }
     },
     variants: {
         extend: {},

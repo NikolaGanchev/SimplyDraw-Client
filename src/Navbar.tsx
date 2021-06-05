@@ -9,15 +9,13 @@ import UndoRedoInput from './UndoRedoInput';
 import FloodFillButton from './FloodFillButton';
 import { useTranslation } from 'react-i18next';
 import GroupConnectComponent from './GroupConnectComponent';
-import AvataaarComponent from './AvataaarComponent';
-import Avataaar from './utils/Avataaar'
 import { VALID_VALUES } from './utils/ValidValues';
 
 export default function Navbar() {
     const [t] = useTranslation('common');
 
     return (
-        <div className="flex h-12 shadow-md bg-white dark:bg-black overflow-x-scroll overflow-y-hidden lg:overflow-visible">
+        <div className="flex h-12 shadow-md bg-white dark:bg-black overflow-x-scroll overflow-y-hidden small:overflow-visible">
             <h1 className="self-center ml-3 text-lg select-none whitespace-nowrap text-left"><b>{t("app.name")}</b></h1>
             <div className="ml-auto mr-3 flex space-x-3">
                 <GroupConnectComponent></GroupConnectComponent>
