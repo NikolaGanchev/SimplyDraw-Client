@@ -63,7 +63,7 @@
             }
         },
         "members": {
-            "host": "host",
+            "host": "Host",
             "isMuted": " is muted",
             "isNotMuted": " is not muted",
             "mute": {

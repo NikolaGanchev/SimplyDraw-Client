@@ -275,7 +275,7 @@ export default function Board() {
                 doFutureAction();
             }
 
-            isControlPressed = e.code === "ControlLeft"
+            isControlPressed = e.code === "ControlLeft";
         }
 
         registerDrawingListeners();
@@ -311,25 +311,31 @@ export default function Board() {
             }
 
             document.removeEventListener('keydown', onKeyEvent);
+            document.removeEventListener('keydown', sendMuteErrorOnUndoOrRedo);
 
             EventBus.unsubscribeAll(EVENT_BUS_KEY);
         }
 
+        function sendMuteError() {
+            EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("error.muted.draw")));
+        }
+
+        function sendMuteErrorOnUndoOrRedo(e: KeyboardEvent) {
+            if (e.code === "KeyZ" || e.code === "KeyY" && isControlPressed) {
+                sendMuteError();
+            }
+
+            isControlPressed = e.code === "ControlLeft";
+        }
+
         function registerErrors() {
 
-            EventBus.subscribe(EVENTS.FULL_ERASE_REQUEST, () => {
-                EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("error.muted.draw")));
-            }, EVENT_BUS_KEY);
-            EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, () => {
-                EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("error.muted.draw")));
-            }, EVENT_BUS_KEY);
-            EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, () => {
-                EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("error.muted.draw")));
-            }, EVENT_BUS_KEY);
+            document.addEventListener('keydown', sendMuteErrorOnUndoOrRedo);
 
-            EventBus.subscribe(EVENTS.JOINED_ROOM, () => {
-                EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("error.muted.draw")));
-            }, EVENT_BUS_KEY);
+            EventBus.subscribe(EVENTS.FULL_ERASE_REQUEST, sendMuteError, EVENT_BUS_KEY);
+            EventBus.subscribe(EVENTS.UNDO_LAST_ACTION_REQUEST, sendMuteError, EVENT_BUS_KEY);
+            EventBus.subscribe(EVENTS.REDO_FUTURE_ACTION_REQUEST, sendMuteError, EVENT_BUS_KEY);
+            EventBus.subscribe(EVENTS.JOINED_ROOM, sendMuteError, EVENT_BUS_KEY);
         }
 
         function saveCanvasToUserDevice() {

@@ -19,7 +19,7 @@ const ContextProvider = ({ children }: any) => {
     const [t] = useTranslation("common");
     const [key, setKey] = useState("");
     const [me, setMe] = useState<Member>();
-    const [name, setName] = useState<string>(t("group.members.host"));
+    const [name, setName] = useState<string>("Default");
     const [hasJoinedRoom, setHasJoinedRoom] = useState(false);
     const [members, setMembers] = useState<Member[]>();
     const [isHostState, setIsHostState] = useState(false);
@@ -32,6 +32,10 @@ const ContextProvider = ({ children }: any) => {
     let socket = useRef<Socket | null>(null);
     const EVENT_BUS_KEY = "EVENT_BUS_KEY";
 
+    // Can't use i18n above since the language hasn't been changed yet
+    useEffect(() => {
+        setName(t("group.members.host"));
+    }, [])
 
     function startServerConnection(token: any) {
         socket.current = io("http://localhost:5000", { query: { "captchaToken": token } });
