@@ -8,5 +8,6 @@ export const PROTECTED_EVENTS: NetworkingEvents[] = [
     NetworkingEvents.MEMBER_LEFT,
     NetworkingEvents.MUTED_STATE_CHANGE,
     NetworkingEvents.MEMBER_NAME_CHANGE,
-    NetworkingEvents.KICK_EVENT
+    NetworkingEvents.KICK_EVENT,
+    NetworkingEvents.RESIZE_EVENT
 ]

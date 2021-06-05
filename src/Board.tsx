@@ -18,6 +18,7 @@ import { VALID_VALUES } from './utils/ValidValues';
 
 export default function Board() {
     const canvasRef = useRef(null);
+    const boardRef = useRef<HTMLDivElement>(null);
     let isDrawing = false;
     let lineWidth = 10;
     let lineCap: CanvasLineCap = "round";
@@ -27,14 +28,14 @@ export default function Board() {
     const EVENT_BUS_KEY = "BOARD";
     const [isMuted, setIsMuted] = useState(false);
     const [t] = useTranslation("common");
-    const { sendDrawEvent }: any = useContext(NetworkContext);
+    const { sendDrawEvent, resize }: any = useContext(NetworkContext);
 
     useEffect(() => {
         let isControlPressed = false;
         const canvas: HTMLCanvasElement = canvasRef.current!;
         const ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
         const EVENT_LISTENERS = new Map<string, any>();
-        EVENT_LISTENERS.set("onresize", resize)
+        EVENT_LISTENERS.set("onresize", onResize)
         EVENT_LISTENERS.set("mousedown", startDrawingMouse);
         EVENT_LISTENERS.set("mouseup", stopDrawingMouse);
         EVENT_LISTENERS.set("mousemove", onMoveEventMouse);
@@ -43,16 +44,21 @@ export default function Board() {
         EVENT_LISTENERS.set("touchend", stopDrawingTouch);
         EVENT_LISTENERS.set("touchmove", onMoveEventTouch);
 
-        resize();
+        onResize();
 
-        window.onresize = resize;
+        window.onresize = onResize;
 
         let event: DrawEvent | null;
         let path: Path;
 
-        function resize() {
+        function onResize() {
             canvas.width = window.innerWidth;
             canvas.height = window.innerHeight;
+
+            let ratio = canvas.width / canvas.height;
+
+            resize(ratio);
+
             EventCache.pastEvents.forEach((e: DrawEvent) => {
                 drawEvent(e);
             })
@@ -406,6 +412,8 @@ export default function Board() {
                 registerDrawingListeners();
             }
         });
+        EventBus.subscribe(EVENTS.RESIZE_EVENT, (ratio: number) => {
+        });
         // After a lot of debugging and reading docs, some things were learned
         // Like the fact that useEffect reruns of every rerender
         // Causing a plethora of strange issues, with listener running an extreme amounts of time
@@ -415,7 +423,7 @@ export default function Board() {
     }, []);
 
     return (
-        <div>
+        <div ref={boardRef}>
             <Members></Members>
             {(isMuted) ?
                 (<Fade duration={500} className="absolute z-10 w-full h-full flex"><div className="absolute bg-black bg-opacity-20 z-10 w-full h-full flex">

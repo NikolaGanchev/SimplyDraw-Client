@@ -328,6 +328,17 @@ const ContextProvider = ({ children }: any) => {
         setMembers([...internalMembers.current]);
     }
 
+    function resize(ratio: number) {
+        if (isHost.current) {
+            let resizeEvent = {
+                type: NetworkingEvents.RESIZE_EVENT,
+                payload: ratio
+            }
+
+            broadcastToAll(connections.current, resizeEvent);
+        }
+    }
+
     // Senders
 
     // Notify members of the new user
@@ -530,6 +541,11 @@ const ContextProvider = ({ children }: any) => {
             case NetworkingEvents.KICK_EVENT: {
                 handleLeaveRoom();
                 EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("group.members.kick.error")));
+                break;
+            }
+            case NetworkingEvents.RESIZE_EVENT: {
+                EventBus.dispatchEvent(EVENTS.RESIZE_EVENT, networkingEvent.payload);
+                break;
             }
         }
     }
@@ -617,7 +633,7 @@ const ContextProvider = ({ children }: any) => {
         EventBus.unsubscribeAll(EVENT_BUS_KEY);
     }
 
-    return (<NetworkContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members, toggleMute, isHostState, me, changeName, disbandRoom, leaveRoom, handleLeaveRoom, kick }}>{children}</NetworkContext.Provider>)
+    return (<NetworkContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members, toggleMute, isHostState, me, changeName, disbandRoom, leaveRoom, handleLeaveRoom, kick, resize }}>{children}</NetworkContext.Provider>)
 }
 
 export { ContextProvider, NetworkContext };

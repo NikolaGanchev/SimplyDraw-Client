@@ -8,5 +8,6 @@ export enum NetworkingEvents {
     MEMBER_LEFT = "memberLeft",
     MUTED_STATE_CHANGE = "mutedStateChange",
     MEMBER_NAME_CHANGE = "memberNameChange",
-    KICK_EVENT = "kick"
+    KICK_EVENT = "kick",
+    RESIZE_EVENT = "resizeEvent"
 }
