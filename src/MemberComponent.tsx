@@ -3,14 +3,14 @@ import { useTranslation } from "react-i18next";
 import AvataaarComponent from "./AvataaarComponent";
 import Member from "./Networking/Member";
 import ResponsiveContentModal from "./ResponsiveContentModal";
-import { SocketContext } from "./SocketContext";
+import { NetworkContext } from "./NetworkContext";
 
 export default function MemberComponent(props: any) {
     const [member, setMember] = useState<Member>(props.member);
     const [showDetails, setShowDetails] = useState(false);
     const [t] = useTranslation("common");
 
-    const { isHostState, toggleMute, me, kick }: any = useContext(SocketContext);
+    const { isHostState, toggleMute, me, kick }: any = useContext(NetworkContext);
 
     function onToggle(e: React.ChangeEvent<HTMLInputElement>) {
         if (e.target) {

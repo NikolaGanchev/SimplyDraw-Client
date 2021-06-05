@@ -5,8 +5,9 @@ import GroupIcon from './resources/group-fill.svg';
 import ResponsiveContentModal from "./ResponsiveContentModal";
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 import EventBus, { EVENTS } from "./Events/EventBus";
-import { SocketContext } from './SocketContext';
+import { NetworkContext } from './NetworkContext';
 import RoomOption from "./RoomOptions";
+import { VALID_VALUES } from "./utils/ValidValues";
 
 export default function GroupConnectComponent(props: any) {
     const [showModal, setShowModal] = useState(false);
@@ -18,7 +19,7 @@ export default function GroupConnectComponent(props: any) {
     const [isCreateRoom, setIsCreateRoom] = useState(false);
     const [isChoose, setIsChoose] = useState(false);
     const [isJoinRoom, setIsJoinRoom] = useState(false);
-    const { key, startServerConnection, createRoom, joinRoom, hasJoinedRoom, changeName, me, disbandRoom, handleLeaveRoom }: any = useContext(SocketContext);
+    const { key, startServerConnection, createRoom, joinRoom, hasJoinedRoom, changeName, me, disbandRoom, handleLeaveRoom }: any = useContext(NetworkContext);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const createNameInputRef = useRef<HTMLInputElement>(null);
     const [name, setName] = useState("");
@@ -110,7 +111,7 @@ export default function GroupConnectComponent(props: any) {
                                 <div>{t("group.setup.rooms.create.instructions")} </div>
                                 <span className="text-xl"><b>{key}</b></span>
                                 <br></br>
-                                <input type="text" maxLength={14} className="p-3 border-2 border-black rounded-md" ref={createNameInputRef} placeholder="Name" defaultValue={me.name}></input>
+                                <input type="text" maxLength={VALID_VALUES.MAX_NAME_SIZE} className="p-3 border-2 border-black rounded-md" ref={createNameInputRef} placeholder="Name" defaultValue={me.name}></input>
                                 <button className="bg-green-400 rounded-md p-3 ml-3 mt-3" onClick={() => { if (createNameInputRef.current) { changeName(createNameInputRef.current.value) } }}>{t("group.setup.rooms.create.name")}</button>
                                 <br></br>
                                 <button className="bg-red-400 rounded-md p-3 mt-3" onClick={disbandRoom}>{t("group.setup.rooms.disband")}</button>
@@ -118,7 +119,7 @@ export default function GroupConnectComponent(props: any) {
                         ) : (null)}
                     {isJoinRoom ?
                         (
-                            <div><input type="text" maxLength={14} className="p-3 border-2 border-black rounded-md" ref={nameInputRef} placeholder="Name" defaultValue={(me) ? me.name : ""}></input>
+                            <div><input type="text" maxLength={VALID_VALUES.MAX_NAME_SIZE} className="p-3 border-2 border-black rounded-md" ref={nameInputRef} placeholder="Name" defaultValue={(me) ? me.name : ""}></input>
                                 <button className="bg-green-400 rounded-md p-3 ml-3" onClick={() => { if (nameInputRef.current) { changeName(nameInputRef.current.value) } }} disabled={!hasJoinedRoom}>{t("group.setup.rooms.join.name")}</button>
                                 <br></br>
                                 <input value={joinRoomCode} type="text" maxLength={6} onChange={handleCodeChange} className="p-3 border-2 border-black rounded-md" ref={inputRef} placeholder="6 letter code" disabled={hasJoinedRoom}></input>

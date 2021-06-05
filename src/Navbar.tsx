@@ -11,6 +11,7 @@ import { useTranslation } from 'react-i18next';
 import GroupConnectComponent from './GroupConnectComponent';
 import AvataaarComponent from './AvataaarComponent';
 import Avataaar from './utils/Avataaar'
+import { VALID_VALUES } from './utils/ValidValues';
 
 export default function Navbar() {
     const [t] = useTranslation('common');
@@ -24,7 +25,7 @@ export default function Navbar() {
                 <UndoRedoInput></UndoRedoInput>
                 <EraseInput></EraseInput>
                 <LineStyleInput defaultColor={"#000000"} default={t("navbar.line.caps.round")} label={t("navbar.line.cap")}></LineStyleInput>
-                <NumberInput list={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].concat(Array.from({ length: (100 - 12) / 2 + 1 }, (_, i) => 12 + (i * 2)))} default={"10"} max={100} defaultColor="#000000" label={t("navbar.line.width")}></NumberInput>
+                <NumberInput list={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].concat(Array.from({ length: (VALID_VALUES.MAX_LINE_SIZE - 12) / 2 + 1 }, (_, i) => 12 + (i * 2)))} default={"10"} max={VALID_VALUES.MAX_LINE_SIZE} defaultColor="#000000" label={t("navbar.line.width")}></NumberInput>
                 <ColorMenu className="self-center"></ColorMenu>
                 <button className="select-none"><img src={DownloadIcon} alt="Download icon" onClick={() => { EventBus.dispatchEvent(EVENTS.CANVAS_DOWNLOAD_REQUEST) }}></img></button>
             </div>

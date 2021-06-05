@@ -12,8 +12,9 @@ import ColorABGR from './utils/ColorABGR';
 import FloodFillEvent from './Events/FloodFillEvent';
 import Members from './Members';
 import { useTranslation } from 'react-i18next';
-import { SocketContext } from './SocketContext';
+import { NetworkContext } from './NetworkContext';
 import { Fade } from 'react-awesome-reveal';
+import { VALID_VALUES } from './utils/ValidValues';
 
 export default function Board() {
     const canvasRef = useRef(null);
@@ -26,7 +27,7 @@ export default function Board() {
     const EVENT_BUS_KEY = "BOARD";
     const [isMuted, setIsMuted] = useState(false);
     const [t] = useTranslation("common");
-    const { sendDrawEvent }: any = useContext(SocketContext);
+    const { sendDrawEvent }: any = useContext(NetworkContext);
 
     useEffect(() => {
         let isControlPressed = false;
@@ -380,6 +381,11 @@ export default function Board() {
             });
         });
         EventBus.subscribe(EVENTS.DRAW_EVENT, (e: DrawEvent) => {
+            if (e.type === DrawEventType.DrawEvent) {
+                if (e.payload.lineWidth < VALID_VALUES.MIN_LINE_SIZE || e.payload.lineWidth > VALID_VALUES.MAX_LINE_SIZE) {
+                    return;
+                }
+            }
             EventCache.addEvent(e);
             drawEvent(e);
         });
