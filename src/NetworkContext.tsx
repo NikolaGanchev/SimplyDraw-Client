@@ -92,6 +92,13 @@ const ContextProvider = ({ children }: any) => {
             });
         });
 
+        socket.current?.once("joinTrySuccessful", (res: any) => {
+            if (res.code === code) {
+                console.log("success");
+                socket.current?.emit("joinTrySuccessful", { code });
+            }
+        })
+
         socket.current?.once("garbageCollected", () => {
             EventBus.dispatchEvent(EVENTS.ERROR, new Error(t("error.room.garbageCollected")));
             leaveRoom();
