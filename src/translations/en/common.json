@@ -60,6 +60,10 @@
                 },
                 "disband": "Disband the room",
                 "leave": "Leave the room"
+            },
+            "placeholder": {
+                "name": "Name",
+                "code": "6 letter code"
             }
         },
         "members": {
