@@ -10,13 +10,25 @@ import FloodFillButton from './FloodFillButton';
 import { useTranslation } from 'react-i18next';
 import GroupConnectComponent from './GroupConnectComponent';
 import { VALID_VALUES } from './utils/ValidValues';
+import ReactTooltip from 'react-tooltip';
+import { useState } from 'react';
+import ResponsiveContentModal from './ResponsiveContentModal';
 
 export default function Navbar() {
     const [t] = useTranslation('common');
+    const [showAbout, setShowAbout] = useState(false);
 
     return (
         <div className="flex h-12 shadow-md bg-white dark:bg-black overflow-x-scroll overflow-y-hidden small:overflow-visible">
-            <h1 className="self-center ml-3 text-lg select-none whitespace-nowrap text-left"><b>{t("app.name")}</b></h1>
+            <h1 data-tip={t("tooltip.about")} onClick={() => { setShowAbout(true) }} className="self-center ml-3 text-lg select-none whitespace-nowrap text-left cursor-pointer"><b>{t("app.name")}</b> </h1>
+            {(showAbout) ?
+                (<ResponsiveContentModal style={{ width: '50rem' }} header={t("tooltip.about")} onResponse={() => { setShowAbout(false) }}>
+                    <span dangerouslySetInnerHTML={{ __html: t("about.text") }}></span>
+                    <br />
+                    <a className="text-blue-500 underline" href='https://github.com/NikolaGanchev/SimplyDraw-Client'>Github</a>
+                </ResponsiveContentModal>) :
+                (null)
+            }
             <div className="ml-auto mr-3 flex space-x-3">
                 <GroupConnectComponent></GroupConnectComponent>
                 <FloodFillButton></FloodFillButton>

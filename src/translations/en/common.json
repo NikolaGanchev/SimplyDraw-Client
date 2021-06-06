@@ -107,6 +107,10 @@
         "redo": "Redo",
         "clear": "Clear canvas",
         "eraser": "Eraser",
-        "actions": "Actions"
+        "actions": "Actions",
+        "about": "About SimplyDraw"
+    },
+    "about": {
+        "text": "Hello! <br /> My name is Nikola. One day I was bored and wanted to do something, so I started writing this project. It was intended to be only a 2 week endeavor, however with me constantly getting new ideas, it took more than a month. It is made with React and it is my first finished React project, despite the numerous times I have worked with the framework. I have to say that it was a great learning experience. <br /> You can check the libraries I used and the code itself in the Github repository:"
     }
 }
