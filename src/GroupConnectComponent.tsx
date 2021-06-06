@@ -19,7 +19,8 @@ export default function GroupConnectComponent(props: any) {
     const [isCreateRoom, setIsCreateRoom] = useState(false);
     const [isChoose, setIsChoose] = useState(false);
     const [isJoinRoom, setIsJoinRoom] = useState(false);
-    const { key, startServerConnection, createRoom, joinRoom, hasJoinedRoom, changeName, me, disbandRoom, handleLeaveRoom }: any = useContext(NetworkContext);
+    const { key, startServerConnection, createRoom, joinRoom, hasJoinedRoom, changeName, me, disbandRoom,
+        handleLeaveRoom, isMuteByDefault, toggleMuteByDefault }: any = useContext(NetworkContext);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const createNameInputRef = useRef<HTMLInputElement>(null);
     const [name, setName] = useState("");
@@ -88,6 +89,12 @@ export default function GroupConnectComponent(props: any) {
         setHeader(t("group.setup.rooms.create.success"));
     });
 
+    function onToggleMuteByDefault(e: React.ChangeEvent<HTMLInputElement>) {
+        if (e.target) {
+            toggleMuteByDefault(e.target.checked);
+        }
+    }
+
     return (
         <div>
             <IconButton icon={GroupIcon} onClick={onClick}></IconButton>
@@ -113,6 +120,13 @@ export default function GroupConnectComponent(props: any) {
                                 <br></br>
                                 <input type="text" maxLength={VALID_VALUES.MAX_NAME_SIZE} className="p-3 border-2 border-black rounded-md" ref={createNameInputRef} placeholder={t("group.setup.placeholder.name")} defaultValue={me.name}></input>
                                 <button className="bg-green-400 rounded-md p-3 ml-3 mt-3" onClick={() => { if (createNameInputRef.current) { changeName(createNameInputRef.current.value) } }}>{t("group.setup.rooms.create.name")}</button>
+                                <br></br>
+                                <label>
+                                    {t("group.members.mute.default.title")}
+                                    <input type="checkbox" checked={isMuteByDefault} onChange={onToggleMuteByDefault} className="place-self-center ml-2 align-middle"></input>
+                                </label>
+                                <br></br>
+                                <span className="text-sm">{t("group.members.mute.default.explanation")}</span>
                                 <br></br>
                                 <button className="bg-red-400 rounded-md p-3 mt-3" onClick={disbandRoom}>{t("group.setup.rooms.disband")}</button>
                             </div>

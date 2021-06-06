@@ -33,7 +33,7 @@ export default function MemberComponent(props: any) {
                             <div>
                                 <label>
                                     {t("group.members.mute.title")}
-                                    <input type="checkbox" checked={member.isMuted} onChange={onToggle}></input>
+                                    <input type="checkbox" checked={member.isMuted} onChange={onToggle} className="place-self-center ml-2 align-middle"></input>
 
                                 </label>
                                 <br></br>

@@ -25,6 +25,8 @@ const ContextProvider = ({ children }: any) => {
     const [hasJoinedRoom, setHasJoinedRoom] = useState(false);
     const [members, setMembers] = useState<Member[]>();
     const [isHostState, setIsHostState] = useState(false);
+    const [isMuteByDefault, setIsMuteByDefault] = useState(false);
+    const isMuteByDefaultRef = useRef(false);
     let internalMembers = useRef<Member[]>([]);
     const mutedIds = useRef<string[]>([]);
     const meRef = useRef<Member>();
@@ -166,6 +168,13 @@ const ContextProvider = ({ children }: any) => {
         sendEventCache(connection);
 
         sendMembers(connection);
+
+        // Would just do toggleMute(member, isMuteByDefault.current) but the toggleMute operation searches and updates the state too much
+        // and sends too many networking requests to notify everyone of the new state
+        // to justify the two lines of code less
+        if (isMuteByDefaultRef.current) {
+            toggleMute(member, true);
+        }
 
         // Setting up peer listeners
         connection.peer.on("data", (data) => {
@@ -326,6 +335,11 @@ const ContextProvider = ({ children }: any) => {
         sendMutedState(member, isMuted);
 
         setMembers([...internalMembers.current]);
+    }
+
+    function toggleMuteByDefault(muteByDefault: boolean) {
+        setIsMuteByDefault(muteByDefault);
+        isMuteByDefaultRef.current = muteByDefault;
     }
 
     function resize(ratio: number) {
@@ -633,7 +647,7 @@ const ContextProvider = ({ children }: any) => {
         EventBus.unsubscribeAll(EVENT_BUS_KEY);
     }
 
-    return (<NetworkContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members, toggleMute, isHostState, me, changeName, disbandRoom, leaveRoom, handleLeaveRoom, kick, resize }}>{children}</NetworkContext.Provider>)
+    return (<NetworkContext.Provider value={{ key, startServerConnection, createRoom, joinRoom, sendDrawEvent, hasJoinedRoom, members, toggleMute, isHostState, me, changeName, disbandRoom, leaveRoom, handleLeaveRoom, kick, resize, isMuteByDefault, toggleMuteByDefault }}>{children}</NetworkContext.Provider>)
 }
 
 export { ContextProvider, NetworkContext };

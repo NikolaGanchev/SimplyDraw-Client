@@ -72,7 +72,11 @@
             "isNotMuted": " is not muted",
             "mute": {
                 "title": "Mute",
-                "explanation": "(When you mute a member no one sees their actions. They are notified.)"
+                "explanation": "(When you mute a member no one sees their actions. They are notified.)",
+                "default": {
+                    "title": "Mute by default",
+                    "explanation": "(When you toggle Mute by default every new member that joins the room will automatically be muted. Only you can unmute them.)"
+                }
             },
             "kick": {
                 "title": "Kick",
