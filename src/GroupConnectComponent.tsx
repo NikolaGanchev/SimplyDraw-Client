@@ -135,12 +135,12 @@ export default function GroupConnectComponent(props: any) {
                     {isJoinRoom ?
                         (
                             <div><input type="text" maxLength={VALID_VALUES.MAX_NAME_SIZE} className="p-3 border-2 border-black rounded-md" ref={nameInputRef} placeholder={t("group.setup.placeholder.name")} defaultValue={(me) ? me.name : ""}></input>
-                                <button className="bg-green-400 rounded-md p-3 ml-3" onClick={() => { if (nameInputRef.current) { changeName(nameInputRef.current.value) } }} disabled={!hasJoinedRoom}>{t("group.setup.rooms.join.name")}</button>
+                                <button className="bg-green-400 rounded-md p-3 ml-3 disabled:opacity-60" onClick={() => { if (nameInputRef.current) { changeName(nameInputRef.current.value) } }} disabled={!hasJoinedRoom}>{t("group.setup.rooms.join.name")}</button>
                                 <br></br>
                                 <input value={joinRoomCode} type="text" maxLength={6} onChange={handleCodeChange} className="p-3 border-2 border-black rounded-md" ref={inputRef} placeholder={t("group.setup.placeholder.code")} disabled={hasJoinedRoom}></input>
-                                <button className="bg-green-400 rounded-md p-3 ml-3 mt-3" onClick={submitCode} disabled={hasJoinedRoom}>{t("group.setup.rooms.join.button")}</button>
+                                <button className="bg-green-400 rounded-md p-3 ml-3 mt-3 disabled:opacity-60" onClick={submitCode} disabled={hasJoinedRoom}>{t("group.setup.rooms.join.button")}</button>
                                 <br></br>
-                                <button className="bg-red-400 rounded-md p-3 mt-3" onClick={handleLeaveRoom} disabled={!hasJoinedRoom}>{t("group.setup.rooms.leave")}</button>
+                                <button className="bg-red-400 rounded-md p-3 mt-3 disabled:opacity-60" onClick={handleLeaveRoom} disabled={!hasJoinedRoom}>{t("group.setup.rooms.leave")}</button>
                             </div>
                         ) : (null)}
                     {hasJoinedRoom ?

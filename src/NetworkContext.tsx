@@ -321,6 +321,7 @@ const ContextProvider = ({ children }: any) => {
 
 
         if (meRef.current && meRef.current.id === member.id) {
+            setMe(new Member(member.id, member.name, member.avatar, isMuted));
             meRef.current.isMuted = isMuted;
         }
 

@@ -49,10 +49,10 @@ export default function MemberComponent(props: any) {
                 :
                 (null)
             }
-            <div data-tip={t("tooltip.actions")} className="relative w-24 h-24 flex flex-col place-items-center place-content-center mr-2 cursor-pointer" onClick={() => { setShowDetails(true) }}>
+            <div data-tip={t("tooltip.actions")} data-place="left" className="relative w-24 h-24 flex flex-col place-items-center place-content-center mr-2 cursor-pointer" onClick={() => { setShowDetails(true) }}>
                 <AvataaarComponent avatar={member.avatar}></AvataaarComponent>
                 <span className="absolute select-none wrap break-words w-24 text-center" style={{ top: '5.625rem' }}>{member.name}</span>
-                <ReactTooltip place="left" type="light" effect="solid" border={true} borderColor="black" />
+                <ReactTooltip type="light" effect="solid" border={true} borderColor="black" />
             </div>
         </div>
     );
