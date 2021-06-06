@@ -7,6 +7,7 @@ import { useState, useEffect } from 'react';
 import ConfirmAlert from "./ConfirmAlert";
 import { useTranslation } from "react-i18next";
 import Color from "./utils/Color";
+import ReactTooltip from "react-tooltip";
 
 export function EraseInput() {
     const activeColor = new Color(209, 213, 219, 1);
@@ -58,19 +59,22 @@ export function EraseInput() {
     return (
         <div><div>{(showModal) ? (<ConfirmAlert header={t("navbar.erase.confirmation.question")} onResponse={onModalResponse}>{t("navbar.erase.confirmation.text")} </ConfirmAlert>) : (null)}</div>
             <div className="flex space-x-1">
-                <div className="relative inline-flex self-center transition-colors place-items-center align-center w-12 h-12 justify-center rounded-md cursor-pointer hover:bg-gray-300">
+                <div data-tip={t("tooltip.clear")} className="relative inline-flex self-center transition-colors place-items-center align-center w-12 h-12 justify-center rounded-md cursor-pointer hover:bg-gray-300">
 
                     <div className="flex flex-col" onClick={onFullErase}>
                         <span className="text-xs text-center pt-1">{t("navbar.erase.clear")}</span>
                         <div className="rounded-full w-10 h-8 flex items-center justify-center ml-auto " ><input type="image" src={EraserFill} className="w-6 h-6 select-none"></input></div>
                     </div>
+                    <ReactTooltip place="bottom" type="light" effect="solid" border={true} borderColor="black" />
                 </div>
 
-                <div className="relative inline-flex self-center transition-colors place-items-center align-center w-12 h-12 justify-center rounded-md cursor-pointer" style={{ backgroundColor: background }} onClick={onEraserClick} onMouseEnter={onHover} onMouseLeave={onStopHover}>
+                <div data-tip={t("tooltip.eraser")} className="relative inline-flex self-center transition-colors place-items-center align-center w-12 h-12 justify-center rounded-md cursor-pointer" style={{ backgroundColor: background }} onClick={onEraserClick} onMouseEnter={onHover} onMouseLeave={onStopHover}>
                     <div>
                         <div className="rounded-full w-10 h-10 flex items-center justify-center ml-auto" ><input type="image" src={Eraser} className="w-6 h-6 select-none"></input></div>
                     </div >
+                    <ReactTooltip place="bottom" type="light" effect="solid" border={true} borderColor="black" />
                 </div>
+
             </div>
         </div>
     );

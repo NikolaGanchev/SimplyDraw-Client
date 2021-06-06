@@ -1,4 +1,4 @@
-import React, { useState, useContext, useRef } from "react";
+import React, { useState, useContext, useRef, ReactDOM } from "react";
 import { useTranslation } from "react-i18next";
 import IconButton from "./IconButton";
 import GroupIcon from './resources/group-fill.svg';
@@ -8,6 +8,7 @@ import EventBus, { EVENTS } from "./Events/EventBus";
 import { NetworkContext } from './NetworkContext';
 import RoomOption from "./RoomOptions";
 import { VALID_VALUES } from "./utils/ValidValues";
+import ReactTooltip from 'react-tooltip';
 
 export default function GroupConnectComponent(props: any) {
     const [showModal, setShowModal] = useState(false);
@@ -97,7 +98,7 @@ export default function GroupConnectComponent(props: any) {
 
     return (
         <div>
-            <IconButton icon={GroupIcon} onClick={onClick}></IconButton>
+            <IconButton icon={GroupIcon} onClick={onClick} tooltip={t("tooltip.rooms")}></IconButton>
             {(showModal) ?
                 (<ResponsiveContentModal header={header} onResponse={() => { setShowModal(false) }}>
                     {isCaptcha ?

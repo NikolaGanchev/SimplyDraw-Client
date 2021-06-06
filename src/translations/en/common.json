@@ -99,5 +99,14 @@
             "name": "You can't change your name while muted"
         },
         "downloading": "We encountered an error while downloading. Please try again."
+    },
+    "tooltip": {
+        "rooms": "Rooms",
+        "fill": "Fill",
+        "undo": "Undo",
+        "redo": "Redo",
+        "clear": "Clear canvas",
+        "eraser": "Eraser",
+        "actions": "Actions"
     }
 }
