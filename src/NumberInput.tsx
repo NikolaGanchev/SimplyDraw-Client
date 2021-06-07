@@ -1,8 +1,8 @@
 import { useRef, useState } from 'react';
 import EventBus from './Events/EventBus';
 import { EVENTS } from './Events/EventBus';
-import ExpandMoreIcon from './resources/expand_more_black_24dp.svg';
-import ExpandLessIcon from './resources/expand_less_black_24dp.svg';
+import ExpandMoreIcon from './resources/ExpandMore';
+import ExpandLessIcon from './resources/ExpandLess';
 import Color from './utils/Color';
 import { useWindowDimensions } from './Hooks';
 import MobileModal from './MobileModal';
@@ -18,13 +18,11 @@ export default function NumberInput(props: any) {
     const [borderColor, setBorderColor] = useState(props.defaultColor);
     const MIN_NUMBER = props.min || 1;
     const MAX_NUMBER = props.max || 999;
-    const [ArrowIcon, setArrowIcon] = useState(ExpandMoreIcon);
     const [label, setLabel] = useState(props.label);
     const { height, width } = useWindowDimensions();
     const [t] = useTranslation("common");
 
     function onButtonClick() {
-        setArrowIcon((isListOpen) ? ExpandMoreIcon : ExpandLessIcon);
         setIsListOpen(!isListOpen);
     }
 
@@ -51,16 +49,16 @@ export default function NumberInput(props: any) {
 
             <div className="h-full flex place-items-center justify-center w-3/4">
                 <label className="text-xs self-start text-center">{label}
-                    <input className="w-full focus:outline-none text-center h-full rounded-md self-center text-base" value={selectedValue} onChange={handleNumberChange}></input>
+                    <input className="w-full focus:outline-none text-center h-full rounded-md self-center text-base dark:bg-gray-900" value={selectedValue} onChange={handleNumberChange}></input>
                 </label>
             </div>
-            <div className="h-full flex place-items-center justify-center w-1/4 border-l-2 hover:bg-gray-300 rounded-md transition-colors" onClick={onButtonClick}><input type="image" src={ArrowIcon}></input></div>
+            <div className="h-full flex place-items-center justify-center w-1/4 border-l-2 hover:bg-gray-300 rounded-md transition-colors dark:hover:bg-gray-600 dark:border-gray-900" onClick={onButtonClick}><button>{(isListOpen) ? <ExpandLessIcon /> : <ExpandMoreIcon />}</button></div>
             {
                 (isListOpen && width > VALID_VALUES.SMALL_SCREEN) ?
                     (<div className="relative flex self-end z-30 justify-end slim-scrollbar">
-                        <div className="rounded-md absolute mt-1 z-50 shadow-lg w-24 h-24 overflow-scroll overflow-x-hidden flex flex-col place-items-center">
+                        <div className="rounded-md absolute mt-1 z-50 shadow-lg w-24 h-24 overflow-scroll overflow-x-hidden flex flex-col place-items-center dark:bg-gray-900">
                             {List.map((entry: any, i: any) => {
-                                return (<Fade duration={100} className="h-6 w-full"><button key={nanoid(3)} className="h-6 w-full hover:bg-gray-300 place-content-center flex transition-colors" onClick={() => { onItemClick(entry) }}>{entry}</button></Fade>);
+                                return (<Fade duration={100} className="h-6 w-full"><button key={nanoid(3)} className="h-6 w-full hover:bg-gray-300 place-content-center flex transition-colors dark:hover:bg-gray-600" onClick={() => { onItemClick(entry) }}>{entry}</button></Fade>);
                             })}
                         </div>
                     </div>)
@@ -71,9 +69,9 @@ export default function NumberInput(props: any) {
             {
                 (isListOpen && width <= VALID_VALUES.SMALL_SCREEN) ?
                     (<MobileModal header={t("navbar.line.mobile.headers.width")} onResponse={() => { onButtonClick() }}><div className="relative flex self-end z-10 justify-end slim-scrollbar hover:bg-white">
-                        <div className="rounded-md mt-1 z-50 bg-white shadow-lg w-24 h-24 overflow-scroll overflow-x-hidden flex flex-col place-items-center">
+                        <div className="rounded-md mt-1 z-50 bg-white shadow-lg w-24 h-24 overflow-scroll overflow-x-hidden flex flex-col place-items-center dark:bg-gray-900">
                             {List.map((entry: any, i: any) => {
-                                return (<button key={nanoid(3)} className="h-8 w-full hover:bg-gray-300 place-content-center flex transition-colors" onClick={() => { onItemClick(entry) }}>{entry}</button>);
+                                return (<button key={nanoid(3)} className="h-8 w-full hover:bg-gray-300 place-content-center flex transition-colors dark:hover:bg-gray-600" onClick={() => { onItemClick(entry) }}>{entry}</button>);
                             })}
                         </div>
                     </div></MobileModal>)

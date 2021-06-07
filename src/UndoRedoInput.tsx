@@ -1,6 +1,6 @@
-import IconButton from "./IconButton";
-import undoIcon from './resources/undo_black_24dp.svg';
-import redoIcon from './resources/redo_black_24dp.svg';
+import SvgIconButton from "./SvgIconButton";
+import undoIcon from './resources/Undo';
+import redoIcon from './resources/Redo';
 import EventBus, { EVENTS } from "./Events/EventBus";
 import EventCache from "./Events/EventCache";
 import { useTranslation } from "react-i18next";
@@ -18,8 +18,8 @@ export default function RedoUndoInput(props: any) {
 
     return (
         <div className="flex space-x-1">
-            <IconButton icon={undoIcon} onClick={sendUndoRequest} disabled={EventCache.pastEvents.length !== 0} tooltip={t("tooltip.undo")}></IconButton>
-            <IconButton icon={redoIcon} onClick={sendRedoRequest} tooltip={t("tooltip.redo")}></IconButton>
+            <SvgIconButton icon={undoIcon} onClick={sendUndoRequest} disabled={EventCache.pastEvents.length !== 0} tooltip={t("tooltip.undo")}></SvgIconButton>
+            <SvgIconButton icon={redoIcon} onClick={sendRedoRequest} tooltip={t("tooltip.redo")}></SvgIconButton>
         </div>
     );
 }

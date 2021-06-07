@@ -1,10 +1,10 @@
-import StyleButton from "./StyleButton";
+
 import { useState } from 'react';
 import EventBus from './Events/EventBus';
 import { EVENTS } from './Events/EventBus';
 import Color from './utils/Color';
-import ExpandMoreIcon from './resources/expand_more_black_24dp.svg';
-import ExpandLessIcon from './resources/expand_less_black_24dp.svg';
+import ExpandMoreIcon from './resources/ExpandMore';
+import ExpandLessIcon from './resources/ExpandLess';
 import { useWindowDimensions } from "./Hooks";
 import MobileModal from "./MobileModal";
 import { useTranslation } from "react-i18next";
@@ -18,7 +18,6 @@ export default function LineStyleInput(props: any) {
     const round = t("navbar.line.caps.round");
     const square = t("navbar.line.caps.square");
     const [List, setList] = useState([fragmented, square, round]);
-    const [ArrowIcon, setArrowIcon] = useState(ExpandMoreIcon);
     const [label, setLabel] = useState(props.label);
     const [isListOpen, setIsListOpen] = useState(false);
     const [borderColor, setBorderColor] = useState(props.defaultColor);
@@ -30,7 +29,6 @@ export default function LineStyleInput(props: any) {
     });
 
     function onButtonClick() {
-        setArrowIcon((isListOpen) ? ExpandMoreIcon : ExpandLessIcon);
         setIsListOpen(!isListOpen);
     }
 
@@ -59,7 +57,7 @@ export default function LineStyleInput(props: any) {
     }
 
     return (
-        <div className="relative top-0 self-center inline-flex space-x-1 rounded-md border-2 hover:bg-gray-300 transition-colors h-full" style={{ borderColor: borderColor }} onClick={onButtonClick}>
+        <div className="relative top-0 self-center inline-flex space-x-1 rounded-md border-2 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors h-full" style={{ borderColor: borderColor }} onClick={onButtonClick}>
             <div className="flex self-center justify-center w-24 h-full rounded-md place-content-center place-items-center cursor-pointer select-none flex-row p-0" style={{ borderColor: borderColor }} >
 
                 <div className="h-full flex place-items-center justify-center w-3/4">
@@ -67,13 +65,13 @@ export default function LineStyleInput(props: any) {
                         <div className="w-full focus:outline-none text-center h-full rounded-md self-center text-base">{selectedValue}</div>
                     </span>
                 </div>
-                <div className="h-full flex place-items-center justify-center w-1/4 rounded-md"><input type="image" src={ArrowIcon}></input></div>
+                <div className="h-full flex place-items-center justify-center w-1/4 rounded-md"><button>{(isListOpen) ? <ExpandLessIcon /> : <ExpandMoreIcon />} </button></div>
                 {
                     (isListOpen && width > VALID_VALUES.SMALL_SCREEN) ?
-                        (<div className="relative flex self-end z-30 justify-end slim-scrollbar hover:bg-white">
-                            <div className="rounded-md absolute mt-1 z-50 bg-white shadow-lg w-24 h-24 overflow-scroll overflow-x-hidden flex flex-col place-items-center">
+                        (<div className="relative flex self-end z-30 justify-end slim-scrollbar dark:bg-gray-900">
+                            <div className="rounded-md absolute mt-1 z-50 shadow-lg w-24 h-24 overflow-scroll overflow-x-hidden flex flex-col place-items-center">
                                 {List.map((entry: any, i: any) => {
-                                    return (<Fade duration={500} className="h-8 w-full"><button key={nanoid(3)} className="h-8 w-full hover:bg-gray-300 place-content-center flex transition-colors" onClick={() => { onItemClick(entry) }}>{entry}</button></Fade>);
+                                    return (<Fade duration={500} className="h-8 w-full"><button key={nanoid(3)} className="h-8 w-full hover:bg-gray-300 place-content-center flex transition-colors dark:hover:bg-gray-600 dark:bg-gray-900" onClick={() => { onItemClick(entry) }}>{entry}</button></Fade>);
                                 })}
                             </div>
                         </div>)
@@ -83,10 +81,10 @@ export default function LineStyleInput(props: any) {
 
                 {
                     (isListOpen && width <= VALID_VALUES.SMALL_SCREEN) ?
-                        (<MobileModal header={t("navbar.line.mobile.headers.cap")} onResponse={() => { setIsListOpen(false) }}><div className="relative flex self-end z-10 justify-end slim-scrollbar hover:bg-white">
-                            <div className="rounded-md mt-1 z-50 bg-white shadow-lg w-24 h-24 overflow-scroll overflow-x-hidden flex flex-col place-items-center">
+                        (<MobileModal header={t("navbar.line.mobile.headers.cap")} onResponse={() => { setIsListOpen(false) }}><div className="relative flex self-end z-10 justify-end slim-scrollbar ">
+                            <div className="rounded-md mt-1 z-50  shadow-lg w-24 h-24 overflow-scroll overflow-x-hidden flex flex-col place-items-center dark:bg-gray-900">
                                 {List.map((entry: any, i: any) => {
-                                    return (<button key={i} className="h-8 w-full hover:bg-gray-300 place-content-center flex transition-colors" onClick={() => { onItemClick(entry) }}>{entry}</button>);
+                                    return (<button key={i} className="h-8 w-full hover:bg-gray-300 dark:hover:bg-gray-600 place-content-center flex transition-colors dark:bg-gray-900" onClick={() => { onItemClick(entry) }}>{entry}</button>);
                                 })}
                             </div>
                         </div></MobileModal>)

@@ -1,14 +1,13 @@
 import React, { useState, useContext, useRef, ReactDOM } from "react";
 import { useTranslation } from "react-i18next";
-import IconButton from "./IconButton";
-import GroupIcon from './resources/group-fill.svg';
+import SvgIconButton from "./SvgIconButton";
+import GroupIcon from './resources/GroupFill';
 import ResponsiveContentModal from "./ResponsiveContentModal";
 import HCaptcha from '@hcaptcha/react-hcaptcha';
 import EventBus, { EVENTS } from "./Events/EventBus";
 import { NetworkContext } from './NetworkContext';
 import RoomOption from "./RoomOptions";
 import { VALID_VALUES } from "./utils/ValidValues";
-import ReactTooltip from 'react-tooltip';
 
 export default function GroupConnectComponent(props: any) {
     const [showModal, setShowModal] = useState(false);
@@ -98,7 +97,7 @@ export default function GroupConnectComponent(props: any) {
 
     return (
         <div>
-            <IconButton icon={GroupIcon} onClick={onClick} tooltip={t("tooltip.rooms")}></IconButton>
+            <SvgIconButton icon={GroupIcon} onClick={onClick} tooltip={t("tooltip.rooms")}></SvgIconButton>
             {(showModal) ?
                 (<ResponsiveContentModal header={header} onResponse={() => { setShowModal(false) }}>
                     {isCaptcha ?
