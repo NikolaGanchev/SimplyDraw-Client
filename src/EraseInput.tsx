@@ -1,4 +1,4 @@
-import ColorCircle from "./ColorCircle";
+
 import Eraser from './resources/eraser-line.svg';
 import EraserFill from './resources/eraser-fill.svg';
 import EventBus from './Events/EventBus';
@@ -12,7 +12,7 @@ import ReactTooltip from "react-tooltip";
 export function EraseInput() {
     const activeColor = new Color(209, 213, 219, 1);
     const inactiveColor = new Color(255, 255, 255);
-    const [background, setBackground] = useState(inactiveColor.rgbaToString());
+    const [background, setBackground] = useState<string | undefined>(undefined);
     const [eraserIsActive, setEraserIsActive] = useState(false);
     const [showModal, setShowModal] = useState(false);
     const [t] = useTranslation('common');
@@ -20,23 +20,13 @@ export function EraseInput() {
     function onEraserClick() {
         if (eraserIsActive) {
             EventBus.dispatchEvent(EVENTS.DISABLE_ERASER_REQUEST);
-            setBackground(inactiveColor.rgbaToString());
+            setBackground(undefined);
         }
         else {
             EventBus.dispatchEvent(EVENTS.ACTIVATE_ERASER_REQUEST);
             setBackground(activeColor.rgbaToString());
         }
         setEraserIsActive(!eraserIsActive);
-    }
-
-    function onHover() {
-        setBackground(activeColor.rgbaToString());
-    }
-
-    function onStopHover() {
-        if (!eraserIsActive) {
-            setBackground(inactiveColor.rgbaToString());
-        }
     }
 
     function onFullErase() {
@@ -68,7 +58,7 @@ export function EraseInput() {
                     <ReactTooltip place="bottom" type="light" effect="solid" border={true} borderColor="black" />
                 </div>
 
-                <div data-tip={t("tooltip.eraser")} className="relative inline-flex self-center transition-colors place-items-center align-center w-12 h-12 justify-center rounded-md cursor-pointer" style={{ backgroundColor: background }} onClick={onEraserClick} onMouseEnter={onHover} onMouseLeave={onStopHover}>
+                <div data-tip={t("tooltip.eraser")} className="relative inline-flex self-center transition-colors place-items-center align-center w-12 h-12 justify-center rounded-md cursor-pointer hover:bg-gray-300" style={{ backgroundColor: background }} onClick={onEraserClick}>
                     <div>
                         <div className="rounded-full w-10 h-10 flex items-center justify-center ml-auto" ><input type="image" src={Eraser} className="w-6 h-6 select-none"></input></div>
                     </div >

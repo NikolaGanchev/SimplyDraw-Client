@@ -2,5 +2,6 @@ export const VALID_VALUES = {
     MIN_LINE_SIZE: 1,
     MAX_LINE_SIZE: 100,
     MAX_NAME_SIZE: 10,
-    ID_LENGTH: 10
+    ID_LENGTH: 10,
+    SMALL_SCREEN: 1080
 }

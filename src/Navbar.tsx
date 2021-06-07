@@ -19,7 +19,7 @@ export default function Navbar() {
     const [showAbout, setShowAbout] = useState(false);
 
     return (
-        <div className="flex h-12 shadow-md bg-white dark:bg-black overflow-x-scroll overflow-y-hidden small:overflow-visible">
+        <div className="flex h-12 shadow-md bg-white dark:bg-black dark:text-white fill-current overflow-x-scroll overflow-y-hidden small:overflow-visible">
             <h1 data-tip={t("tooltip.about")} onClick={() => { setShowAbout(true) }} className="self-center ml-3 text-lg select-none whitespace-nowrap text-left cursor-pointer"><b>{t("app.name")}</b> </h1>
             {(showAbout) ?
                 (<ResponsiveContentModal style={{ width: '50rem' }} header={t("tooltip.about")} onResponse={() => { setShowAbout(false) }}>

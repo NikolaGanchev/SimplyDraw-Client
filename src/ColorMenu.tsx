@@ -10,6 +10,7 @@ import MobileModal from './MobileModal';
 import { useTranslation } from 'react-i18next';
 import { nanoid } from 'nanoid';
 import { Fade } from 'react-awesome-reveal';
+import { VALID_VALUES } from './utils/ValidValues';
 
 export default function ColorMenu(props: any) {
     const [shouldShowMenu, setShouldShowMenu] = useState(false);
@@ -73,12 +74,12 @@ export default function ColorMenu(props: any) {
                 <div className="">
                     <button className="rounded-full w-10 h-10 flex items-center justify-center ml-auto" onClick={onMenuClick} style={{ backgroundColor: color.rgbaToString() }}><img src={PickColorIcon} className="w-6 h-6 select-none"></img></button>
                 </div >
-                {(shouldShowMenu && width > 1024) ? (
+                {(shouldShowMenu && width > VALID_VALUES.SMALL_SCREEN) ? (
                     <div className="relative flex self-end justify-end z-30" ref={ColorPickerRef}>
                         <Fade duration={500} className="absolute mt-1 z-50"><SketchPicker color={color} onChange={onChangeColor}></SketchPicker></Fade>
                     </div>) : (null)}
 
-                {(isClicked && width <= 1024) ? (
+                {(isClicked && width <= VALID_VALUES.SMALL_SCREEN) ? (
                     <MobileModal header={t("navbar.color.mobile.headers.color")} onResponse={() => { setIsClicked(false) }}><SketchPicker className="h-1/2" color={color} onChange={onChangeColor}></SketchPicker></MobileModal>
                 ) : (null)}
             </div>

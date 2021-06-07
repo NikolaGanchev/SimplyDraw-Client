@@ -10,6 +10,7 @@ import MobileModal from "./MobileModal";
 import { useTranslation } from "react-i18next";
 import { nanoid } from "nanoid";
 import { Fade } from "react-awesome-reveal";
+import { VALID_VALUES } from "./utils/ValidValues";
 
 export default function LineStyleInput(props: any) {
     const [t] = useTranslation("common");
@@ -59,7 +60,7 @@ export default function LineStyleInput(props: any) {
 
     return (
         <div className="relative top-0 self-center inline-flex space-x-1 rounded-md border-2 hover:bg-gray-300 transition-colors h-full" style={{ borderColor: borderColor }} onClick={onButtonClick}>
-            <div className="flex self-center justify-center w-24 h-full rounded-md place-content-center place-items-center cursor-pointer select-none flex-row p-0 mt-0.5 " style={{ borderColor: borderColor }} >
+            <div className="flex self-center justify-center w-24 h-full rounded-md place-content-center place-items-center cursor-pointer select-none flex-row p-0" style={{ borderColor: borderColor }} >
 
                 <div className="h-full flex place-items-center justify-center w-3/4">
                     <span className="text-xs self-start text-center">{label}
@@ -68,7 +69,7 @@ export default function LineStyleInput(props: any) {
                 </div>
                 <div className="h-full flex place-items-center justify-center w-1/4 rounded-md"><input type="image" src={ArrowIcon}></input></div>
                 {
-                    (isListOpen && width > 1024) ?
+                    (isListOpen && width > VALID_VALUES.SMALL_SCREEN) ?
                         (<div className="relative flex self-end z-30 justify-end slim-scrollbar hover:bg-white">
                             <div className="rounded-md absolute mt-1 z-50 bg-white shadow-lg w-24 h-24 overflow-scroll overflow-x-hidden flex flex-col place-items-center">
                                 {List.map((entry: any, i: any) => {
@@ -81,7 +82,7 @@ export default function LineStyleInput(props: any) {
                 }
 
                 {
-                    (isListOpen && width <= 1024) ?
+                    (isListOpen && width <= VALID_VALUES.SMALL_SCREEN) ?
                         (<MobileModal header={t("navbar.line.mobile.headers.cap")} onResponse={() => { setIsListOpen(false) }}><div className="relative flex self-end z-10 justify-end slim-scrollbar hover:bg-white">
                             <div className="rounded-md mt-1 z-50 bg-white shadow-lg w-24 h-24 overflow-scroll overflow-x-hidden flex flex-col place-items-center">
                                 {List.map((entry: any, i: any) => {
