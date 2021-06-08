@@ -100,7 +100,7 @@ export default function GroupConnectComponent(props: any) {
                 (<ResponsiveContentModal header={header} onResponse={() => { setShowModal(false) }}>
                     {isCaptcha ?
                         (
-                            <HCaptcha sitekey="10000000-ffff-ffff-ffff-000000000001" onVerify={onVerifyCaptcha} />
+                            <HCaptcha sitekey="d4e70c8e-3026-4940-8d7c-a40d5daf0d62" onVerify={onVerifyCaptcha} />
                         ) : (null)}
 
                     {isChoose ?
