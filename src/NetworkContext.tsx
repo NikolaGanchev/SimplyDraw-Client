@@ -42,7 +42,7 @@ const ContextProvider = ({ children }: any) => {
     }, [])
 
     function startServerConnection(token: any) {
-        socket.current = io("http://localhost:5000", { query: { "captchaToken": token } });
+        socket.current = io("https://simplydraw-server.herokuapp.com/", { query: { "captchaToken": token } });
 
         socket.current.once("success", (res: any) => {
             EventBus.dispatchEvent(EVENTS.SUCCESSFUL_SERVER_CONNECTION);
