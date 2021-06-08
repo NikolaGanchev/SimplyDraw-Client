@@ -96,7 +96,6 @@ const ContextProvider = ({ children }: any) => {
 
         socket.current?.once("joinTrySuccessful", (res: any) => {
             if (res.code === code) {
-                console.log("success");
                 socket.current?.emit("joinTrySuccessful", { code });
             }
         })

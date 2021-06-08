@@ -24,7 +24,6 @@ function switchLanguageIfPossible(lang: string, i18n: i18n) {
 function TranslationHelper() {
   const [t, i18n] = useTranslation();
   let { lang }: any = useParams();
-  console.log(lang);
   switchLanguageIfPossible(lang, i18n);
   return (<div></div>)
 }
