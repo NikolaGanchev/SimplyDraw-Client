@@ -415,7 +415,7 @@ export default function Board() {
         EventBus.subscribe(EVENTS.RESIZE_EVENT, (ratio: number) => {
         });
         // After a lot of debugging and reading docs, some things were learned
-        // Like the fact that useEffect reruns of every rerender
+        // Like the fact that useEffect reruns on every rerender
         // Causing a plethora of strange issues, with listener running an extreme amounts of time
         // it turns out, all you need to fix it is [], to basically say that it should only rerun when the values in that list update
         // which is never

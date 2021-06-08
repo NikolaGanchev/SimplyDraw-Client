@@ -12,7 +12,7 @@ SimplyDraw is a website that allows you, as the name suggests, to simply draw. N
 
 Nikola Ganchev
 
-## Documentation
+## Features
 
 ### Drawing
 
@@ -50,10 +50,30 @@ You can redo an action you undid by using the redo button
 
 You can fill using the fill button
 
-### Groups
+### Rooms
 
-You can use groups to draw with other people
+You can use rooms to draw with other people
+
+#### Create room
+
+Create a room after passing a Captcha challenge. You will be presented with a menu to change your name (by default host), disband your room, mute new members by default and your room code. Share your room code with other people so they can join.
+
+##### Muting and kicking as host
+
+As the host of a room you can mute and kick members, by pressing their avatar on the right and selecting an option. Muted members can't draw, but they can still see what others are drawing
+
+##### Mute by default
+
+As the host, you can check the mute by default option. If you activate it, anyone new that joins the room will instantly be muted.
+
+#### Join room
+
+Join a room after passing a Captcha challenge. You will be presented with a menu to change your name, input the code of the room you are trying to join, a join button and a leave button that is active while you are in a room
 
 ### Downloading
 
 You can use the download button to download your work when you finish.
+
+## Remaining
+
+I worked on this project for more than a month, however it wasn't enough to finish everything I had in mind. The remaining is to decouple components from the app itself (Like NumberInput.tsx, despite the name suggesting that it is a reusable component is directly tied to the line width change event), generalize some components (like ResponsiveContentModal and a few others sharing about 80% of their code) and somehow break up the NetworkContext.tsx (because 653 lines of code are too much). As far as new features go, I would finish up the resize functionality between the host and client (essentially a canvas ratio sync), which is implemented up to the resize event that is used in Board.tsx, so a all that remains is a single function to di the actual sync after receiving the ratio from the host. If I ever have the time, I may revisit this project to fix these issues. For now, I'm open sourcing it and launching it.
