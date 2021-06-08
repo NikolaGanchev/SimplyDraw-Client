@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useState } from 'react';
 import EventBus from './Events/EventBus';
 import { EVENTS } from './Events/EventBus';
 import ExpandMoreIcon from './resources/ExpandMore';
@@ -19,7 +19,7 @@ export default function NumberInput(props: any) {
     const MIN_NUMBER = props.min || 1;
     const MAX_NUMBER = props.max || 999;
     const [label, setLabel] = useState(props.label);
-    const { height, width } = useWindowDimensions();
+    const { width } = useWindowDimensions();
     const [t] = useTranslation("common");
 
     function onButtonClick() {
@@ -38,7 +38,7 @@ export default function NumberInput(props: any) {
 
     function handleNumberChange(event: React.ChangeEvent<HTMLInputElement>) {
         let value = event.target.value.replace(/\D/, '');
-        if (value >= MIN_NUMBER && value <= MAX_NUMBER || value === "") {
+        if ((value >= MIN_NUMBER && value <= MAX_NUMBER) || value === "") {
             setSelectedValue(value);
             EventBus.dispatchEvent(EVENTS.LINE_WIDTH_CHANGE_REQUEST, value);
         }

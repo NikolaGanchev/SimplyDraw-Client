@@ -2,7 +2,7 @@ import Eraser from './resources/Eraser';
 import EraserFill from './resources/EraserFill';
 import EventBus from './Events/EventBus';
 import { EVENTS } from './Events/EventBus';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import ConfirmAlert from "./ConfirmAlert";
 import { useTranslation } from "react-i18next";
 import Color from "./utils/Color";

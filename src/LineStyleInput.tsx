@@ -22,7 +22,7 @@ export default function LineStyleInput(props: any) {
     const [isListOpen, setIsListOpen] = useState(false);
     const [borderColor, setBorderColor] = useState(props.defaultColor);
     const [selectedValue, setSelectedValue] = useState(props.default);
-    const { height, width } = useWindowDimensions();
+    const { width } = useWindowDimensions();
 
     EventBus.subscribe(EVENTS.DRAWING_COLOR_CHANGE_REQUEST, (newColor: Color) => {
         setBorderColor(newColor.rgbaToString());

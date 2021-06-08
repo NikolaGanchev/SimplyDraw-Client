@@ -1,6 +1,6 @@
 import { io, Socket } from 'socket.io-client';
 import Peer from 'simple-peer';
-import { createContext, useContext, useEffect, useRef, useState } from 'react';
+import { createContext, useEffect, useRef, useState } from 'react';
 import EventBus, { EVENTS } from './Events/EventBus';
 import Connection from './Networking/Connection';
 import { broadcast, broadcastToAll } from './Networking/Utils';
@@ -442,7 +442,7 @@ const ContextProvider = ({ children }: any) => {
         // Host shouldn't continue with protected events
         if (PROTECTED_EVENTS.includes(networkingEvent.type)) return;
 
-        if (networkingEvent.type == NetworkingEvents.MEMBER_NAME_CHANGE) {
+        if (networkingEvent.type === NetworkingEvents.MEMBER_NAME_CHANGE) {
             let index = getMemberIndexById(internalMembers.current, connection.id);
             let member = internalMembers.current[index];
             if (member.id !== connection.id) {
@@ -504,7 +504,7 @@ const ContextProvider = ({ children }: any) => {
     function consumeEvent(networkingEvent: NetworkingEvent, connection: Connection | null = null) {
         switch (networkingEvent.type) {
             case NetworkingEvents.NEW_MEMBER_JOINED: {
-                if (networkingEvent.payload.name > VALID_VALUES.MAX_NAME_SIZE || networkingEvent.payload.id.length != VALID_VALUES.ID_LENGTH) return;
+                if (networkingEvent.payload.name > VALID_VALUES.MAX_NAME_SIZE || networkingEvent.payload.id.length !== VALID_VALUES.ID_LENGTH) return;
                 EventBus.dispatchEvent(EVENTS.NEW_MEMBER_JOINED, networkingEvent.payload);
                 addMember(networkingEvent.payload);
                 break;
@@ -591,7 +591,7 @@ const ContextProvider = ({ children }: any) => {
 
     function hasMember(member: Member) {
         for (let m of internalMembers.current) {
-            if (m == member) {
+            if (m === member) {
                 return true;
             }
         }
@@ -603,7 +603,7 @@ const ContextProvider = ({ children }: any) => {
         if (!memberArray) return -1;
         let index = -1;
         for (let i = 0; i < memberArray.length; i++) {
-            if (memberArray[i].id == id) {
+            if (memberArray[i].id === id) {
                 index = i;
                 break;
             }
@@ -616,7 +616,7 @@ const ContextProvider = ({ children }: any) => {
         if (!connectionArray) return -1;
         let index = -1;
         for (let i = 0; i < connectionArray.length; i++) {
-            if (connectionArray[i].id == id) {
+            if (connectionArray[i].id === id) {
                 index = i;
                 break;
             }

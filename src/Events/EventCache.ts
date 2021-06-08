@@ -4,8 +4,6 @@ class EventCache {
     pastEvents: Array<DrawEvent> = [];
     futureEvents: Array<DrawEvent> = [];
 
-    constructor() { };
-
     addEvent(drawEvent: DrawEvent | null) {
         if (drawEvent === null || drawEvent === undefined) return;
 

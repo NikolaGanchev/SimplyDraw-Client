@@ -1,4 +1,3 @@
-import logo from './logo.svg';
 import './App.css';
 import './index.css'
 import Navbar from './Navbar'
@@ -18,6 +17,7 @@ function switchLanguageIfPossible(lang: string, i18n: i18n) {
       i18n.changeLanguage(lang);
       return true;
     }
+    return false;
   })
 }
 
@@ -40,7 +40,7 @@ function App() {
 
   useEffect(() => {
     document.title = t("app.name");
-  }, []);
+  }, [t]);
 
   return (
     <div>

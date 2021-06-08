@@ -18,7 +18,7 @@ export default function ColorMenu(props: any) {
     const [PickColorIcon, setPickColorIcon] = useState(PickColorIconLight);
     const ColorPickerRef: MutableRefObject<HTMLDivElement | null> = useRef(null);
     const [isClicked, setIsClicked] = useState(false);
-    const { height, width } = useWindowDimensions();
+    const { width } = useWindowDimensions();
     const defaultColors = [
         new Color(0, 0, 0, 255),
         new Color(255, 255, 0, 255),
@@ -72,7 +72,7 @@ export default function ColorMenu(props: any) {
 
             <div className="relative inline-flex flex-col self-center hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors place-items-center align-center w-12 h-12 justify-center rounded-md" onMouseEnter={onHover} onMouseLeave={onHoverLeave}>
                 <div className="">
-                    <button className="rounded-full w-10 h-10 flex items-center justify-center ml-auto" onClick={onMenuClick} style={{ backgroundColor: color.rgbaToString() }}><img src={PickColorIcon} className="w-6 h-6 select-none"></img></button>
+                    <button className="rounded-full w-10 h-10 flex items-center justify-center ml-auto" onClick={onMenuClick} style={{ backgroundColor: color.rgbaToString() }}><img alt="Pick color" src={PickColorIcon} className="w-6 h-6 select-none"></img></button>
                 </div >
                 {(shouldShowMenu && width > VALID_VALUES.SMALL_SCREEN) ? (
                     <div className="relative flex self-end justify-end z-30" ref={ColorPickerRef}>

@@ -1,4 +1,4 @@
-import { useContext, useState } from 'react';
+import { useState } from 'react';
 import EventBus, { EVENTS } from './Events/EventBus';
 import FillIcon from './resources/FormatColor';
 import Color from './utils/Color';

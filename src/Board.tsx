@@ -19,18 +19,18 @@ import { VALID_VALUES } from './utils/ValidValues';
 export default function Board() {
     const canvasRef = useRef(null);
     const boardRef = useRef<HTMLDivElement>(null);
-    let isDrawing = false;
-    let lineWidth = 10;
-    let lineCap: CanvasLineCap = "round";
-    let currentColor: Color = new Color(0, 0, 0, 255);
-    let selectedColor: Color = new Color(0, 0, 0, 255);
-    let isFloodFill: boolean = false;
     const EVENT_BUS_KEY = "BOARD";
     const [isMuted, setIsMuted] = useState(false);
     const [t] = useTranslation("common");
     const { sendDrawEvent, resize }: any = useContext(NetworkContext);
 
     useEffect(() => {
+        let isDrawing = false;
+        let lineWidth = 10;
+        let lineCap: CanvasLineCap = "round";
+        let currentColor: Color = new Color(0, 0, 0, 255);
+        let selectedColor: Color = new Color(0, 0, 0, 255);
+        let isFloodFill: boolean = false;
         let isControlPressed = false;
         const canvas: HTMLCanvasElement = canvasRef.current!;
         const ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
@@ -328,7 +328,7 @@ export default function Board() {
         }
 
         function sendMuteErrorOnUndoOrRedo(e: KeyboardEvent) {
-            if (e.code === "KeyZ" || e.code === "KeyY" && isControlPressed) {
+            if ((e.code === "KeyZ" || e.code === "KeyY") && isControlPressed) {
                 sendMuteError();
             }
 

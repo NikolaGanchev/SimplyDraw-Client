@@ -1,4 +1,4 @@
-import React, { useState, useContext, useRef, ReactDOM } from "react";
+import React, { useState, useContext, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import SvgIconButton from "./SvgIconButton";
 import GroupIcon from './resources/GroupFill';
@@ -23,7 +23,6 @@ export default function GroupConnectComponent(props: any) {
         handleLeaveRoom, isMuteByDefault, toggleMuteByDefault }: any = useContext(NetworkContext);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const createNameInputRef = useRef<HTMLInputElement>(null);
-    const [name, setName] = useState("");
 
     function onClick() {
         setShowModal(true);
@@ -69,7 +68,6 @@ export default function GroupConnectComponent(props: any) {
         setIsCreateRoom(false);
         setIsJoinRoom(false);
         setJoinRoomCode("");
-        setName("");
     }
 
     EventBus.subscribe(EVENTS.SUCCESSFUL_SERVER_CONNECTION, () => {

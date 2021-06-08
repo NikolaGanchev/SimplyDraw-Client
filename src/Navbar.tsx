@@ -36,7 +36,7 @@ export default function Navbar() {
                 <LineStyleInput defaultColor={"#000000"} default={t("navbar.line.caps.round")} label={t("navbar.line.cap")}></LineStyleInput>
                 <NumberInput list={[1, 2, 3, 4, 5, 6, 7, 8, 9, 10].concat(Array.from({ length: (VALID_VALUES.MAX_LINE_SIZE - 12) / 2 + 1 }, (_, i) => 12 + (i * 2)))} default={"10"} max={VALID_VALUES.MAX_LINE_SIZE} defaultColor="#000000" label={t("navbar.line.width")}></NumberInput>
                 <ColorMenu className="self-center"></ColorMenu>
-                <button className="select-none"><div onClick={() => { EventBus.dispatchEvent(EVENTS.CANVAS_DOWNLOAD_REQUEST) }}><DownloadIcon alt="Download icon" /></div></button>
+                <button className="select-none hover:bg-gray-300 dark:hover:bg-gray-600 rounded-sm transition-colors"><div onClick={() => { EventBus.dispatchEvent(EVENTS.CANVAS_DOWNLOAD_REQUEST) }}><DownloadIcon alt="Download icon" /></div></button>
             </div>
 
         </div>
