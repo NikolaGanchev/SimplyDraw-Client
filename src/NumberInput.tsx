@@ -12,13 +12,13 @@ import { Fade } from 'react-awesome-reveal';
 import { VALID_VALUES } from './utils/ValidValues';
 
 export default function NumberInput(props: any) {
-    const [List, setList] = useState(props.list);
+    const [List] = useState(props.list);
     const [selectedValue, setSelectedValue] = useState(props.default);
     const [isListOpen, setIsListOpen] = useState(false);
     const [borderColor, setBorderColor] = useState(props.defaultColor);
     const MIN_NUMBER = props.min || 1;
     const MAX_NUMBER = props.max || 999;
-    const [label, setLabel] = useState(props.label);
+    const [label] = useState(props.label);
     const { width } = useWindowDimensions();
     const [t] = useTranslation("common");
 

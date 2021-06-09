@@ -22,7 +22,7 @@ function switchLanguageIfPossible(lang: string, i18n: i18n) {
 }
 
 function TranslationHelper() {
-  const [t, i18n] = useTranslation();
+  const [, i18n] = useTranslation();
   let { lang }: any = useParams();
   switchLanguageIfPossible(lang, i18n);
   return (<div></div>)

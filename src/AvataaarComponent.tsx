@@ -5,18 +5,18 @@ import { AvataaarOptions } from './utils/Avataaar';
 export default function AvataaarComponent(props: any) {
     let avatar = props.avatar;
 
-    const [topType, setTopType] = useState(AvataaarOptions.topType[avatar.topType]);
-    const [accessoriesType, setAccessoriesType] = useState(AvataaarOptions.accessoriesType[avatar.accessoriesType]);
-    const [hairColor, setHairColor] = useState(AvataaarOptions.hairColor[avatar.hairColor]);
-    const [facialHairType, setFacialHairType] = useState(AvataaarOptions.facialHairType[avatar.facialHairType]);
-    const [facialHairColor, setFacialHairColor] = useState(AvataaarOptions.facialHairColor[avatar.facialHairColor]);
-    const [clotheType, setClotheType] = useState(AvataaarOptions.clotheType[avatar.clotheType]);
-    const [clotheColor, setClotheColor] = useState(AvataaarOptions.clotheColor[avatar.clotheColor]);
-    const [graphicType, setGraphicType] = useState(AvataaarOptions.graphicType[avatar.graphicType]);
-    const [eyeType, setEyeType] = useState("Default");
-    const [eyebrowType, setEyebrowType] = useState("Default");
-    const [mouthType, setMouthType] = useState("Default");
-    const [skinColor, setSkinColor] = useState(AvataaarOptions.skinColor[avatar.skinColor]);
+    const [topType] = useState(AvataaarOptions.topType[avatar.topType]);
+    const [accessoriesType] = useState(AvataaarOptions.accessoriesType[avatar.accessoriesType]);
+    const [hairColor] = useState(AvataaarOptions.hairColor[avatar.hairColor]);
+    const [facialHairType] = useState(AvataaarOptions.facialHairType[avatar.facialHairType]);
+    const [facialHairColor] = useState(AvataaarOptions.facialHairColor[avatar.facialHairColor]);
+    const [clotheType] = useState(AvataaarOptions.clotheType[avatar.clotheType]);
+    const [clotheColor] = useState(AvataaarOptions.clotheColor[avatar.clotheColor]);
+    const [graphicType] = useState(AvataaarOptions.graphicType[avatar.graphicType]);
+    const [eyeType] = useState("Default");
+    const [eyebrowType] = useState("Default");
+    const [mouthType] = useState("Default");
+    const [skinColor] = useState(AvataaarOptions.skinColor[avatar.skinColor]);
 
     return (
         <Avatar

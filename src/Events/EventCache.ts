@@ -17,7 +17,7 @@ class EventCache {
 
         const event: DrawEvent | undefined = this.pastEvents.pop();
 
-        if (event === undefined) throw ("Undefined event");
+        if (event === undefined) throw (new Error("Undefined event"));
 
         if (event === null) this.rewindEvent();
 
@@ -31,7 +31,7 @@ class EventCache {
 
         const event: DrawEvent | undefined = this.futureEvents.pop();
 
-        if (event === undefined) throw ("Undefined event");
+        if (event === undefined) throw (new Error("Undefined event"));
 
         this.pastEvents.push(event);
 

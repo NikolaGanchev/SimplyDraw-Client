@@ -420,7 +420,7 @@ export default function Board() {
         // it turns out, all you need to fix it is [], to basically say that it should only rerun when the values in that list update
         // which is never
         // Well, that was a nice learning experience
-    }, []);
+    }, [resize, sendDrawEvent, t]);
 
     return (
         <div ref={boardRef}>

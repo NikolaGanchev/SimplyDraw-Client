@@ -17,8 +17,8 @@ export default function LineStyleInput(props: any) {
     const fragmented = t("navbar.line.caps.fragmented");
     const round = t("navbar.line.caps.round");
     const square = t("navbar.line.caps.square");
-    const [List, setList] = useState([fragmented, square, round]);
-    const [label, setLabel] = useState(props.label);
+    const [List] = useState([fragmented, square, round]);
+    const [label] = useState(props.label);
     const [isListOpen, setIsListOpen] = useState(false);
     const [borderColor, setBorderColor] = useState(props.defaultColor);
     const [selectedValue, setSelectedValue] = useState(props.default);

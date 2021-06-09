@@ -7,7 +7,7 @@ import { NetworkContext } from "./NetworkContext";
 import ReactTooltip from "react-tooltip";
 
 export default function MemberComponent(props: any) {
-    const [member, setMember] = useState<Member>(props.member);
+    const [member] = useState<Member>(props.member);
     const [showDetails, setShowDetails] = useState(false);
     const [t] = useTranslation("common");
 
