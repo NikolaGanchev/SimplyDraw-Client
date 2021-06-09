@@ -10,7 +10,6 @@ import ReactTooltip from "react-tooltip";
 
 export function EraseInput() {
     const activeColor = new Color(209, 213, 219, 1);
-    const inactiveColor = new Color(255, 255, 255);
     const [background, setBackground] = useState<string | undefined>(undefined);
     const [eraserIsActive, setEraserIsActive] = useState(false);
     const [showModal, setShowModal] = useState(false);
