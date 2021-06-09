@@ -116,7 +116,7 @@ export default function GroupConnectComponent(props: any) {
                                 <div>{t("group.setup.rooms.create.instructions")} </div>
                                 <span className="text-xl"><b>{key}</b></span>
                                 <br></br>
-                                <input type="text" maxLength={VALID_VALUES.MAX_NAME_SIZE} className="p-3 border-2 border-black rounded-md" ref={createNameInputRef} placeholder={t("group.setup.placeholder.name")} defaultValue={me.name}></input>
+                                <input type="text" maxLength={VALID_VALUES.MAX_NAME_SIZE} className="p-3 border-2 border-black rounded-md dark:bg-gray-900" ref={createNameInputRef} placeholder={t("group.setup.placeholder.name")} defaultValue={me.name}></input>
                                 <button className="bg-green-400 rounded-md p-3 ml-3 mt-3" onClick={() => { if (createNameInputRef.current) { changeName(createNameInputRef.current.value) } }}>{t("group.setup.rooms.create.name")}</button>
                                 <br></br>
                                 <label>
@@ -131,10 +131,10 @@ export default function GroupConnectComponent(props: any) {
                         ) : (null)}
                     {isJoinRoom ?
                         (
-                            <div><input type="text" maxLength={VALID_VALUES.MAX_NAME_SIZE} className="p-3 border-2 border-black rounded-md" ref={nameInputRef} placeholder={t("group.setup.placeholder.name")} defaultValue={(me) ? me.name : ""}></input>
+                            <div><input type="text" maxLength={VALID_VALUES.MAX_NAME_SIZE} className="p-3 border-2 border-black rounded-md dark:bg-gray-900" ref={nameInputRef} placeholder={t("group.setup.placeholder.name")} defaultValue={(me) ? me.name : ""}></input>
                                 <button className="bg-green-400 rounded-md p-3 ml-3 disabled:opacity-60" onClick={() => { if (nameInputRef.current) { changeName(nameInputRef.current.value) } }} disabled={!hasJoinedRoom}>{t("group.setup.rooms.join.name")}</button>
                                 <br></br>
-                                <input value={joinRoomCode} type="text" maxLength={6} onChange={handleCodeChange} className="p-3 border-2 border-black rounded-md" ref={inputRef} placeholder={t("group.setup.placeholder.code")} disabled={hasJoinedRoom}></input>
+                                <input value={joinRoomCode} type="text" maxLength={6} onChange={handleCodeChange} className="p-3 border-2 border-black rounded-md dark:bg-gray-900" ref={inputRef} placeholder={t("group.setup.placeholder.code")} disabled={hasJoinedRoom}></input>
                                 <button className="bg-green-400 rounded-md p-3 ml-3 mt-3 disabled:opacity-60" onClick={submitCode} disabled={hasJoinedRoom}>{t("group.setup.rooms.join.button")}</button>
                                 <br></br>
                                 <button className="bg-red-400 rounded-md p-3 mt-3 disabled:opacity-60" onClick={handleLeaveRoom} disabled={!hasJoinedRoom}>{t("group.setup.rooms.leave")}</button>
