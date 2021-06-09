@@ -39,7 +39,7 @@ const ContextProvider = ({ children }: any) => {
     // Can't use i18n above since the language hasn't been changed yet
     useEffect(() => {
         setName(t("group.members.host"));
-    }, [t])
+    }, [])
 
     function startServerConnection(token: any) {
         socket.current = io("https://simplydraw-server.herokuapp.com/", { query: { "captchaToken": token } });
