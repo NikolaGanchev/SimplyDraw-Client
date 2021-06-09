@@ -42,7 +42,7 @@ export function EraseInput() {
 
     EventBus.subscribe(EVENTS.DRAWING_COLOR_CHANGE_REQUEST, () => {
         setEraserIsActive(false);
-        setBackground(inactiveColor.rgbaToString());
+        setBackground(undefined);
     });
 
     return (
