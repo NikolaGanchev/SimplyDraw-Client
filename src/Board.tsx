@@ -254,8 +254,6 @@ export default function Board() {
 
             // check we are actually filling a different color
             if (targetColor !== fillColor) {
-
-                console.log("reached");
                 const pixelsToCheck = [x, y];
                 while (pixelsToCheck.length > 0) {
                     const y = pixelsToCheck.pop();
