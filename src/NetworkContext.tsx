@@ -35,6 +35,8 @@ const ContextProvider = ({ children }: any) => {
     const connections = useRef<Connection[]>([]);
     let socket = useRef<Socket | null>(null);
     const EVENT_BUS_KEY = "EVENT_BUS_KEY";
+    const SERVER: string | undefined = process.env.REACT_APP_SERVER;
+
 
     // Can't use i18n above since the language hasn't been changed yet
     useEffect(() => {
@@ -42,7 +44,10 @@ const ContextProvider = ({ children }: any) => {
     }, [])
 
     function startServerConnection(token: any) {
-        socket.current = io("https://simplydraw-server.herokuapp.com/", { query: { "captchaToken": token } });
+        if (SERVER == undefined) {
+            throw (new Error("Undefined server"));
+        }
+        socket.current = io(SERVER, { query: { "captchaToken": token } });
 
         socket.current.once("success", (res: any) => {
             EventBus.dispatchEvent(EVENTS.SUCCESSFUL_SERVER_CONNECTION);

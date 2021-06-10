@@ -23,6 +23,10 @@ export default function GroupConnectComponent(props: any) {
         handleLeaveRoom, isMuteByDefault, toggleMuteByDefault }: any = useContext(NetworkContext);
     const nameInputRef = useRef<HTMLInputElement>(null);
     const createNameInputRef = useRef<HTMLInputElement>(null);
+    const HCAPTCHA_KEY = process.env.REACT_APP_HCAPTCHA_PUBLIC_KEY;
+    if (HCAPTCHA_KEY == undefined) {
+        throw (new Error("Undefined captcha key"));
+    }
 
     function onClick() {
         setShowModal(true);
@@ -100,7 +104,7 @@ export default function GroupConnectComponent(props: any) {
                 (<ResponsiveContentModal header={header} onResponse={() => { setShowModal(false) }}>
                     {isCaptcha ?
                         (
-                            <HCaptcha sitekey="d4e70c8e-3026-4940-8d7c-a40d5daf0d62" onVerify={onVerifyCaptcha} />
+                            <HCaptcha sitekey={HCAPTCHA_KEY} onVerify={onVerifyCaptcha} />
                         ) : (null)}
 
                     {isChoose ?
