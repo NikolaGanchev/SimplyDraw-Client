@@ -52,8 +52,8 @@ export default function Board() {
         let path: Path;
 
         function onResize() {
-            canvas.width = window.innerWidth;
-            canvas.height = window.innerHeight;
+            canvas.width = Math.max(document.body.scrollWidth, window.innerWidth);
+            canvas.height = Math.max(document.body.scrollWidth, window.innerHeight);
 
             let ratio = canvas.width / canvas.height;
 
@@ -424,7 +424,7 @@ export default function Board() {
     }, []);
 
     return (
-        <div ref={boardRef}>
+        <div ref={boardRef} className="fixed left-0 right-0 top-0">
             <Members></Members>
             {(isMuted) ?
                 (<Fade duration={500} className="absolute z-10 w-full h-full flex"><div className="absolute bg-black bg-opacity-20 z-10 w-full h-full flex">
