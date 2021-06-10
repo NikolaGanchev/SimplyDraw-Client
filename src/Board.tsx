@@ -235,7 +235,9 @@ export default function Board() {
             let y = startingPixel.y;
             if (x === undefined || y === undefined) return;
 
-            const fillColor = ColorABGR.fromRGBA(color).abgrToDecimalNumber();
+            // convert fillColor from RGBA to ABGR and from signed to unsigned value to ensure the equality check works 
+            // and its type matches the target color
+            const fillColor = ColorABGR.fromRGBA(color).abgrToDecimalNumber() >>> 0;
 
             const imageData = ctx.getImageData(0, 0, ctx.canvas.width, ctx.canvas.height);
 
@@ -253,6 +255,7 @@ export default function Board() {
             // check we are actually filling a different color
             if (targetColor !== fillColor) {
 
+                console.log("reached");
                 const pixelsToCheck = [x, y];
                 while (pixelsToCheck.length > 0) {
                     const y = pixelsToCheck.pop();
