@@ -18,7 +18,7 @@ export default function RedoUndoInput(props: any) {
 
     return (
         <div className="flex space-x-1">
-            <SvgIconButton icon={undoIcon} onClick={sendUndoRequest} disabled={EventCache.pastEvents.length !== 0} tooltip={t("tooltip.undo")}></SvgIconButton>
+            <SvgIconButton icon={undoIcon} onClick={sendUndoRequest} tooltip={t("tooltip.undo")}></SvgIconButton>
             <SvgIconButton icon={redoIcon} onClick={sendRedoRequest} tooltip={t("tooltip.redo")}></SvgIconButton>
         </div>
     );
